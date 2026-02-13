@@ -1,3 +1,129 @@
+/* Theme variables */
+:root[data-theme="light"] {
+  --bg-primary: #f5f5f5;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f9f9f9;
+  --text-primary: #333333;
+  --text-secondary: #555555;
+  --text-tertiary: #666666;
+  --text-muted: #999999;
+  --border-color: #dddddd;
+  --border-light: #eeeeee;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --gradient-start: #667eea;
+  --gradient-end: #764ba2;
+  --focus-color: #667eea;
+  --theme-toggle-bg: #ffffff;
+  --theme-toggle-border: #dddddd;
+  --theme-toggle-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --theme-toggle-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --success-color: #2ecc71;
+  --error-color: #e74c3c;
+  --warning-color: #f39c12;
+  --info-color: #3498db;
+  --segment-bg: #f9f9f9;
+}
+
+:root[data-theme="dark"] {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-tertiary: #0f3460;
+  --text-primary: #eaeaea;
+  --text-secondary: #c5c5c5;
+  --text-tertiary: #a0a0a0;
+  --text-muted: #808080;
+  --border-color: #2d3e50;
+  --border-light: #364f6b;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --gradient-start: #667eea;
+  --gradient-end: #764ba2;
+  --focus-color: #7c9aff;
+  --theme-toggle-bg: #16213e;
+  --theme-toggle-border: #364f6b;
+  --theme-toggle-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --theme-toggle-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.7);
+  --success-color: #27ae60;
+  --error-color: #c0392b;
+  --warning-color: #e67e22;
+  --info-color: #2980b9;
+  --segment-bg: #0f3460;
+}
+
+:root[data-theme="ocean"] {
+  --bg-primary: #e0f2f7;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f9fb;
+  --text-primary: #0d3b4f;
+  --text-secondary: #1a5971;
+  --text-tertiary: #2d7a94;
+  --text-muted: #6b9eb0;
+  --border-color: #b3dae6;
+  --border-light: #d4ebf2;
+  --shadow: rgba(13, 59, 79, 0.1);
+  --gradient-start: #00acc1;
+  --gradient-end: #0277bd;
+  --focus-color: #00acc1;
+  --theme-toggle-bg: #ffffff;
+  --theme-toggle-border: #b3dae6;
+  --theme-toggle-shadow: 0 2px 8px rgba(0, 172, 193, 0.2);
+  --theme-toggle-shadow-hover: 0 4px 12px rgba(0, 172, 193, 0.3);
+  --success-color: #26a69a;
+  --error-color: #e57373;
+  --warning-color: #ffb74d;
+  --info-color: #4fc3f7;
+  --segment-bg: #f0f9fb;
+}
+
+:root[data-theme="forest"] {
+  --bg-primary: #e8f5e9;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f8f4;
+  --text-primary: #1b5e20;
+  --text-secondary: #2e7d32;
+  --text-tertiary: #388e3c;
+  --text-muted: #66bb6a;
+  --border-color: #a5d6a7;
+  --border-light: #c8e6c9;
+  --shadow: rgba(27, 94, 32, 0.1);
+  --gradient-start: #43a047;
+  --gradient-end: #2e7d32;
+  --focus-color: #43a047;
+  --theme-toggle-bg: #ffffff;
+  --theme-toggle-border: #a5d6a7;
+  --theme-toggle-shadow: 0 2px 8px rgba(67, 160, 71, 0.2);
+  --theme-toggle-shadow-hover: 0 4px 12px rgba(67, 160, 71, 0.3);
+  --success-color: #4caf50;
+  --error-color: #e57373;
+  --warning-color: #ffb74d;
+  --info-color: #4fc3f7;
+  --segment-bg: #f1f8f4;
+}
+
+:root[data-theme="sunset"] {
+  --bg-primary: #fff3e0;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #fff8f0;
+  --text-primary: #bf360c;
+  --text-secondary: #d84315;
+  --text-tertiary: #e64a19;
+  --text-muted: #ff8a65;
+  --border-color: #ffccbc;
+  --border-light: #ffe0d0;
+  --shadow: rgba(191, 54, 12, 0.1);
+  --gradient-start: #ff6f00;
+  --gradient-end: #d84315;
+  --focus-color: #ff6f00;
+  --theme-toggle-bg: #ffffff;
+  --theme-toggle-border: #ffccbc;
+  --theme-toggle-shadow: 0 2px 8px rgba(255, 111, 0, 0.2);
+  --theme-toggle-shadow-hover: 0 4px 12px rgba(255, 111, 0, 0.3);
+  --success-color: #66bb6a;
+  --error-color: #ef5350;
+  --warning-color: #ffa726;
+  --info-color: #42a5f5;
+  --segment-bg: #fff8f0;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,7 +131,9 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 code {
@@ -15,4 +143,11 @@ code {
 
 * {
   box-sizing: border-box;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
 }

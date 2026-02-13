@@ -1,6 +1,7 @@
 .App {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
 }
 
 .App-header {
@@ -61,16 +62,17 @@
 }
 
 .upload-section, .jobs-section {
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 8px;
   padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: background-color 0.3s ease;
 }
 
 .upload-section h2, .jobs-section h2 {
   margin-top: 0;
-  color: #333;
-  border-bottom: 2px solid #667eea;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--gradient-start);
   padding-bottom: 0.5rem;
 }
 
@@ -82,16 +84,18 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .file-input, .text-input, .select-input {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #ddd;
+  border: 2px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
-  transition: border-color 0.3s;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: border-color 0.3s, background-color 0.3s;
   box-sizing: border-box;
 }
 
@@ -103,12 +107,12 @@ textarea.text-input {
 
 .file-input:focus, .text-input:focus, .select-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--focus-color);
 }
 
 .file-info {
   margin-top: 0.5rem;
-  color: #666;
+  color: var(--text-tertiary);
   font-size: 0.9rem;
 }
 
@@ -116,7 +120,7 @@ textarea.text-input {
   display: block;
   margin-top: 0.25rem;
   font-size: 0.85rem;
-  color: #888;
+  color: var(--text-muted);
   font-style: italic;
 }
 
@@ -136,14 +140,14 @@ textarea.text-input {
 .submit-button {
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
   color: white;
   border: none;
   border-radius: 4px;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, opacity 0.2s;
+  transition: transform 0.2s, opacity 0.2s, background 0.3s;
 }
 
 .submit-button:hover:not(:disabled) {
@@ -166,7 +170,7 @@ textarea.text-input {
 
 .no-jobs {
   text-align: center;
-  color: #999;
+  color: var(--text-muted);
   padding: 2rem;
 }
 
@@ -177,26 +181,27 @@ textarea.text-input {
 }
 
 .job-card {
-  border: 2px solid #ddd;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   padding: 1.5rem;
-  transition: box-shadow 0.3s;
+  background-color: var(--bg-secondary);
+  transition: box-shadow 0.3s, background-color 0.3s;
 }
 
 .job-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 .job-card.completed {
-  border-color: #2ecc71;
+  border-color: var(--success-color);
 }
 
 .job-card.failed {
-  border-color: #e74c3c;
+  border-color: var(--error-color);
 }
 
 .job-card.processing {
-  border-color: #f39c12;
+  border-color: var(--warning-color);
 }
 
 .job-header {
@@ -208,7 +213,7 @@ textarea.text-input {
 
 .job-header h3 {
   margin: 0;
-  color: #333;
+  color: var(--text-primary);
   font-size: 1.2rem;
 }
 
@@ -246,13 +251,13 @@ textarea.text-input {
 
 .job-info p {
   margin: 0.5rem 0;
-  color: #666;
+  color: var(--text-tertiary);
 }
 
 .results {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 2px solid #eee;
+  border-top: 2px solid var(--border-light);
 }
 
 .results-header {
@@ -265,17 +270,18 @@ textarea.text-input {
 .results h4 {
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
-  color: #444;
+  color: var(--text-secondary);
 }
 
 .transcription-text {
-  background-color: #f9f9f9;
+  background-color: var(--bg-tertiary);
   padding: 1rem;
   border-radius: 4px;
   line-height: 1.6;
-  color: #333;
+  color: var(--text-primary);
   max-height: 200px;
   overflow-y: auto;
+  transition: background-color 0.3s;
 }
 
 .metadata {
@@ -287,7 +293,7 @@ textarea.text-input {
 
 .metadata p {
   margin: 0;
-  color: #666;
+  color: var(--text-tertiary);
 }
 
 .segments {
@@ -303,31 +309,36 @@ textarea.text-input {
 }
 
 .segment {
-  background-color: #f9f9f9;
+  background-color: var(--segment-bg);
   padding: 0.75rem;
   border-radius: 4px;
   font-size: 0.9rem;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .segment .timestamp {
-  color: #3498db;
+  color: var(--info-color);
   font-weight: 600;
   margin-right: 0.5rem;
 }
 
 .segment .speaker {
-  color: #9b59b6;
+  color: var(--gradient-start);
   font-weight: 600;
   margin-right: 0.5rem;
 }
 
 .segment .text {
-  color: #333;
+  color: var(--text-primary);
 }
 
 .more {
   text-align: center;
-  color: #999;
+  color: var(--text-muted);
   font-style: italic;
   margin-top: 0.5rem;
 }
@@ -335,7 +346,7 @@ textarea.text-input {
 .nlp-results {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 2px solid #eee;
+  border-top: 2px solid var(--border-light);
 }
 
 .key-phrases, .sentiment {
@@ -350,17 +361,18 @@ textarea.text-input {
 }
 
 .tag {
-  background-color: #667eea;
+  background-color: var(--gradient-start);
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.85rem;
+  transition: background-color 0.3s;
 }
 
 .delete-button {
   margin-top: 1rem;
   padding: 0.5rem 1rem;
-  background-color: #e74c3c;
+  background-color: var(--error-color);
   color: white;
   border: none;
   border-radius: 4px;
@@ -369,5 +381,6 @@ textarea.text-input {
 }
 
 .delete-button:hover {
-  background-color: #c0392b;
+  background-color: var(--error-color);
+  filter: brightness(0.9);
 }
