@@ -19,7 +19,7 @@ python-multipart==0.0.6
 # Export functionality
 python-docx==1.1.0
 reportlab==4.1.0
-Pillow==10.3.0
+Pillow==12.1.1
 
 # Whisper transcription
 openai-whisper==20231117
