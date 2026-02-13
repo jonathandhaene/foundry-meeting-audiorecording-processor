@@ -31,7 +31,8 @@ class WhisperTranscriber:
         model_size: str = "base",
         language: Optional[str] = None,
         use_api: bool = False,
-        api_key: Optional[str] = None
+        api_key: Optional[str] = None,
+        custom_terms: Optional[List[str]] = None
     ):
         """
         Initialize Whisper transcriber.
@@ -41,11 +42,13 @@ class WhisperTranscriber:
             language: Language code (None for auto-detection)
             use_api: Use OpenAI API instead of local model
             api_key: OpenAI API key (required if use_api=True)
+            custom_terms: List of custom terminology for improved recognition
         """
         self.model_size = model_size
         self.language = language
         self.use_api = use_api
         self.api_key = api_key
+        self.custom_terms = custom_terms or []
 
         if use_api:
             if not api_key:
@@ -91,19 +94,50 @@ class WhisperTranscriber:
         else:
             return self._transcribe_local(audio_file_path, enable_diarization)
 
+    def _generate_initial_prompt(self) -> str:
+        """
+        Generate initial prompt with custom terms for Whisper.
+        
+        Whisper uses an initial prompt to guide transcription, which is useful for:
+        - Custom terminology and proper nouns
+        - Technical jargon
+        - Mixed-language contexts
+        
+        Returns:
+            Initial prompt string containing custom terms
+        """
+        if not self.custom_terms:
+            return ""
+        
+        # Create a natural sentence incorporating custom terms
+        # This helps Whisper understand these are important terms to recognize
+        terms_text = ", ".join(self.custom_terms[:20])  # Limit to avoid token limits
+        prompt = f"This transcription may contain the following terms: {terms_text}."
+        
+        logger.info(f"Using initial prompt with {len(self.custom_terms)} custom terms")
+        return prompt
+    
     def _transcribe_local(
         self,
         audio_file_path: str,
         enable_diarization: bool
     ) -> TranscriptionResult:
         """Transcribe using local Whisper model."""
+        # Generate initial prompt with custom terms
+        initial_prompt = self._generate_initial_prompt()
+        
         # Transcribe with word timestamps
-        result = self.model.transcribe(
-            audio_file_path,
-            language=self.language,
-            word_timestamps=True,
-            verbose=False
-        )
+        transcribe_options = {
+            "language": self.language,
+            "word_timestamps": True,
+            "verbose": False
+        }
+        
+        # Add initial prompt if custom terms are provided
+        if initial_prompt:
+            transcribe_options["initial_prompt"] = initial_prompt
+        
+        result = self.model.transcribe(audio_file_path, **transcribe_options)
 
         segments = []
         full_text_parts = []
@@ -132,6 +166,7 @@ class WhisperTranscriber:
                 "model": self.model_size,
                 "method": "whisper_local",
                 "diarization_enabled": False,
+                "custom_terms_count": len(self.custom_terms),
                 "timestamp": datetime.utcnow().isoformat()
             }
         )
@@ -139,22 +174,25 @@ class WhisperTranscriber:
     def _transcribe_with_api(self, audio_file_path: str) -> TranscriptionResult:
         """Transcribe using OpenAI Whisper API."""
         logger.info("Using OpenAI Whisper API")
+        
+        # Generate initial prompt with custom terms
+        initial_prompt = self._generate_initial_prompt()
 
         with open(audio_file_path, "rb") as audio_file:
-            # Call OpenAI API
+            # Call OpenAI API with optional custom prompt
+            api_params = {
+                "model": "whisper-1",
+                "file": audio_file,
+                "response_format": "verbose_json"
+            }
+            
             if self.language:
-                response = self.openai.Audio.transcribe(
-                    "whisper-1",
-                    audio_file,
-                    language=self.language,
-                    response_format="verbose_json"
-                )
-            else:
-                response = self.openai.Audio.transcribe(
-                    "whisper-1",
-                    audio_file,
-                    response_format="verbose_json"
-                )
+                api_params["language"] = self.language
+            
+            if initial_prompt:
+                api_params["prompt"] = initial_prompt
+            
+            response = self.openai.Audio.transcribe(**api_params)
 
         segments = []
         full_text_parts = []
@@ -183,6 +221,7 @@ class WhisperTranscriber:
                 "model": "whisper-1",
                 "method": "whisper_api",
                 "diarization_enabled": False,
+                "custom_terms_count": len(self.custom_terms),
                 "timestamp": datetime.utcnow().isoformat()
             }
         )

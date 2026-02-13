@@ -65,7 +65,9 @@ class AzureSpeechTranscriber:
         speech_region: str,
         language: str = "en-US",
         enable_diarization: bool = True,
-        max_speakers: int = 10
+        max_speakers: int = 10,
+        custom_terms: Optional[List[str]] = None,
+        language_candidates: Optional[List[str]] = None
     ):
         """
         Initialize Azure Speech transcriber.
@@ -76,12 +78,16 @@ class AzureSpeechTranscriber:
             language: Primary language code (e.g., 'en-US')
             enable_diarization: Enable speaker diarization
             max_speakers: Maximum number of speakers to identify
+            custom_terms: List of custom terminology for improved recognition
+            language_candidates: List of language codes for multi-language support (e.g., ['en-US', 'nl-NL'])
         """
         self.speech_key = speech_key
         self.speech_region = speech_region
         self.language = language
         self.enable_diarization = enable_diarization
         self.max_speakers = max_speakers
+        self.custom_terms = custom_terms or []
+        self.language_candidates = language_candidates or []
 
         try:
             import azure.cognitiveservices.speech as speechsdk
@@ -104,6 +110,50 @@ class AzureSpeechTranscriber:
         
         # Request word-level timestamps
         self.speech_config.request_word_level_timestamps()
+    
+    def _create_phrase_list(self, recognizer) -> None:
+        """
+        Create and apply phrase list grammar for custom terminology.
+        
+        Args:
+            recognizer: Speech recognizer or conversation transcriber instance
+        """
+        if not self.custom_terms:
+            return
+        
+        try:
+            # Create phrase list grammar
+            phrase_list_grammar = self.speechsdk.PhraseListGrammar.from_recognizer(recognizer)
+            
+            # Add custom terms to phrase list
+            for term in self.custom_terms:
+                if term and term.strip():
+                    phrase_list_grammar.addPhrase(term.strip())
+                    logger.debug(f"Added custom term to phrase list: {term.strip()}")
+            
+            logger.info(f"Applied {len(self.custom_terms)} custom terms to phrase list")
+        except Exception as e:
+            logger.warning(f"Failed to create phrase list: {e}")
+    
+    def _setup_auto_detect_source_language_config(self):
+        """
+        Set up automatic language detection configuration for multi-language support.
+        
+        Returns:
+            AutoDetectSourceLanguageConfig if language candidates are provided, None otherwise
+        """
+        if not self.language_candidates or len(self.language_candidates) < 2:
+            return None
+        
+        try:
+            auto_detect_config = self.speechsdk.languageconfig.AutoDetectSourceLanguageConfig(
+                languages=self.language_candidates
+            )
+            logger.info(f"Enabled multi-language detection for: {', '.join(self.language_candidates)}")
+            return auto_detect_config
+        except Exception as e:
+            logger.warning(f"Failed to setup auto-detect language config: {e}")
+            return None
 
     def transcribe_audio(
         self,
@@ -133,10 +183,23 @@ class AzureSpeechTranscriber:
 
     def _transcribe_basic(self, audio_config) -> TranscriptionResult:
         """Basic transcription without speaker diarization."""
-        speech_recognizer = self.speechsdk.SpeechRecognizer(
-            speech_config=self.speech_config,
-            audio_config=audio_config
-        )
+        # Set up multi-language detection if configured
+        auto_detect_config = self._setup_auto_detect_source_language_config()
+        
+        if auto_detect_config:
+            speech_recognizer = self.speechsdk.SpeechRecognizer(
+                speech_config=self.speech_config,
+                audio_config=audio_config,
+                auto_detect_source_language_config=auto_detect_config
+            )
+        else:
+            speech_recognizer = self.speechsdk.SpeechRecognizer(
+                speech_config=self.speech_config,
+                audio_config=audio_config
+            )
+        
+        # Apply custom phrase list for improved recognition
+        self._create_phrase_list(speech_recognizer)
 
         segments = []
         full_text_parts = []
@@ -182,6 +245,8 @@ class AzureSpeechTranscriber:
             language=self.language,
             metadata={
                 "diarization_enabled": False,
+                "custom_terms_count": len(self.custom_terms),
+                "language_candidates": self.language_candidates,
                 "timestamp": datetime.utcnow().isoformat()
             }
         )
@@ -197,6 +262,9 @@ class AzureSpeechTranscriber:
             speech_config=self.speech_config,
             audio_config=audio_config
         )
+        
+        # Apply custom phrase list for improved recognition
+        self._create_phrase_list(conversation_transcriber)
 
         segments = []
         full_text_parts = []
@@ -248,6 +316,8 @@ class AzureSpeechTranscriber:
                 "diarization_enabled": True,
                 "speaker_count": len(speakers),
                 "speakers": list(speakers),
+                "custom_terms_count": len(self.custom_terms),
+                "language_candidates": self.language_candidates,
                 "timestamp": datetime.utcnow().isoformat()
             }
         )
