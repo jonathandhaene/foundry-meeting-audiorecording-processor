@@ -30,8 +30,15 @@ A comprehensive end-to-end solution for processing meeting audio files with mult
 - **Web UI**: Interactive React-based interface for easy file upload and transcription
 - **Multi-language Support**: Full UI localization in all 24 official EU languages
 - **REST API**: FastAPI backend for programmatic access
-- **Real-time Progress**: Track transcription status and view results instantly
+- **Real-time Progress**: Visual progress bars and detailed status updates
 - **Job Management**: View, compare, and manage multiple transcription jobs
+
+### ✨ Enhanced Features
+- **Audio Playback**: Built-in player with timestamp navigation and segment markers
+- **Searchable Transcripts**: Find and highlight specific words or phrases
+- **Export Options**: Download transcriptions in TXT, DOCX, or PDF format
+- **Toast Notifications**: Non-intrusive alerts for job status updates
+- **Accessibility**: WCAG 2.1 AA compliant with screen reader support, keyboard navigation, and adjustable font sizes
 
 ### 🚀 Deployment
 - **Scalable**: Azure Functions for serverless processing
@@ -195,9 +202,15 @@ The Web UI will open at `http://localhost:3000`
 5. **Optional**: Add custom terms for better accuracy (comma-separated or upload file)
 6. **Optional**: Enable multi-language support (for mixed-language content)
 7. Click "Transcribe"
-8. View results in real-time
+8. **Watch real-time progress** with visual progress bars
+9. **Play back audio** with the integrated audio player
+10. **Search transcripts** for specific terms
+11. **Export results** in TXT, DOCX, or PDF format
+12. **Adjust accessibility** settings as needed (font size, high contrast)
 
 For detailed UI usage instructions, see [docs/UI_USAGE.md](docs/UI_USAGE.md)
+
+For information on new enhancement features, see [docs/ENHANCEMENTS_GUIDE.md](docs/ENHANCEMENTS_GUIDE.md)
 
 **Multi-Language UI Support**
 
