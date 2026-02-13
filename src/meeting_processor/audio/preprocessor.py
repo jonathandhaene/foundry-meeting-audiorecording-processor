@@ -7,6 +7,7 @@ and preparation for transcription services.
 
 import os
 import subprocess
+import json
 from pathlib import Path
 from typing import Optional, Dict, Any
 import logging
@@ -154,7 +155,6 @@ class AudioPreprocessor:
                 text=True,
                 check=True
             )
-            import json
             data = json.loads(result.stdout)
 
             # Extract audio stream info
