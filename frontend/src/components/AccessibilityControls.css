@@ -1,0 +1,148 @@
+.accessibility-controls {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1000;
+}
+
+.accessibility-toggle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.accessibility-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.accessibility-toggle:focus {
+  outline: 3px solid #667eea;
+  outline-offset: 3px;
+}
+
+.accessibility-panel {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 280px;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.accessibility-panel h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+}
+
+.control-group {
+  margin-bottom: 1rem;
+}
+
+.control-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.control-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.control-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.control-group input[type="checkbox"] {
+  margin-right: 0.5rem;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.control-info {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.control-info p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #888;
+  font-style: italic;
+}
+
+/* High contrast mode styles */
+body.high-contrast {
+  filter: contrast(1.5);
+}
+
+body.high-contrast .App {
+  background-color: #000;
+  color: #fff;
+}
+
+body.high-contrast .App-header {
+  background: #000;
+  border-bottom: 3px solid #fff;
+}
+
+body.high-contrast .upload-section,
+body.high-contrast .jobs-section {
+  background: #000;
+  border: 2px solid #fff;
+}
+
+body.high-contrast button {
+  border: 2px solid #fff;
+}
+
+@media (max-width: 768px) {
+  .accessibility-controls {
+    bottom: 1rem;
+    right: 1rem;
+  }
+  
+  .accessibility-panel {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 70px;
+  }
+}

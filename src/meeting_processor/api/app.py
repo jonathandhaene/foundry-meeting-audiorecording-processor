@@ -50,6 +50,10 @@ jobs_db: Dict[str, Dict[str, Any]] = {}
 TEMP_DIR = Path(tempfile.gettempdir()) / "meeting_transcription"
 TEMP_DIR.mkdir(exist_ok=True)
 
+# Export constants
+MAX_KEY_PHRASES_EXPORT = 20  # Maximum number of key phrases to include in exports
+MAX_SEGMENTS_TIMELINE = 20   # Maximum number of segments to show in audio timeline
+
 
 class TranscriptionMethod(str, Enum):
     """Available transcription methods."""
@@ -400,6 +404,279 @@ def process_transcription(
                 os.unlink(processed_path)
         except Exception as e:
             logger.warning(f"Failed to clean up processed file: {e}")
+
+
+@app.get("/api/audio/{job_id}")
+async def serve_audio(job_id: str):
+    """
+    Serve the audio file for a completed job.
+    """
+    if job_id not in jobs_db:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    job = jobs_db[job_id]
+    file_path = Path(job["file_path"])
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Audio file not found")
+    
+    from fastapi.responses import FileResponse
+    return FileResponse(
+        path=str(file_path),
+        media_type="audio/wav",
+        filename=job["filename"]
+    )
+
+
+@app.post("/api/export/{job_id}")
+async def export_transcription(job_id: str, format: str = Form(...)):
+    """
+    Export transcription in different formats (txt, docx, pdf).
+    """
+    if job_id not in jobs_db:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    job = jobs_db[job_id]
+    
+    if job["status"] != JobStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="Job not completed yet")
+    
+    if not job.get("result"):
+        raise HTTPException(status_code=404, detail="No transcription result found")
+    
+    transcription = job["result"]["transcription"]
+    nlp_analysis = job["result"].get("nlp_analysis")
+    
+    try:
+        if format == "txt":
+            return export_as_txt(transcription, nlp_analysis, job["filename"])
+        elif format == "docx":
+            return export_as_docx(transcription, nlp_analysis, job["filename"])
+        elif format == "pdf":
+            return export_as_pdf(transcription, nlp_analysis, job["filename"])
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported format: {format}")
+    except Exception as e:
+        logger.error(f"Export failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+
+def export_as_txt(transcription: Dict[str, Any], nlp_analysis: Optional[Dict[str, Any]], filename: str):
+    """Export transcription as plain text file."""
+    from fastapi.responses import Response
+    from io import StringIO
+    
+    output = StringIO()
+    output.write(f"Transcription: {filename}\n")
+    output.write("=" * 80 + "\n\n")
+    
+    # Metadata
+    if transcription.get("language"):
+        output.write(f"Language: {transcription['language']}\n")
+    if transcription.get("duration"):
+        output.write(f"Duration: {transcription['duration']:.2f} seconds\n")
+    if transcription.get("metadata", {}).get("speaker_count"):
+        output.write(f"Speakers: {transcription['metadata']['speaker_count']}\n")
+    output.write("\n")
+    
+    # Full text
+    output.write("Full Transcription:\n")
+    output.write("-" * 80 + "\n")
+    output.write(transcription.get("full_text", "") + "\n\n")
+    
+    # Segments with timestamps
+    if transcription.get("segments"):
+        output.write("\nDetailed Segments:\n")
+        output.write("-" * 80 + "\n")
+        for segment in transcription["segments"]:
+            timestamp = f"[{segment['start_time']:.1f}s - {segment['end_time']:.1f}s]"
+            speaker = f"{segment.get('speaker_id', 'Unknown')}: " if segment.get('speaker_id') else ""
+            output.write(f"{timestamp} {speaker}{segment['text']}\n")
+    
+    # NLP Analysis
+    if nlp_analysis:
+        output.write("\n\nContent Analysis:\n")
+        output.write("=" * 80 + "\n")
+        
+        if nlp_analysis.get("sentiment"):
+            output.write(f"\nSentiment: {nlp_analysis['sentiment'].get('overall', 'N/A')}\n")
+        
+        if nlp_analysis.get("key_phrases"):
+            output.write("\nKey Phrases:\n")
+            for phrase in nlp_analysis["key_phrases"][:MAX_KEY_PHRASES_EXPORT]:
+                output.write(f"  - {phrase['text']}\n")
+    
+    content = output.getvalue()
+    return Response(
+        content=content,
+        media_type="text/plain",
+        headers={"Content-Disposition": f"attachment; filename={filename.rsplit('.', 1)[0]}.txt"}
+    )
+
+
+def export_as_docx(transcription: Dict[str, Any], nlp_analysis: Optional[Dict[str, Any]], filename: str):
+    """Export transcription as Word document."""
+    from docx import Document
+    from docx.shared import Pt, RGBColor
+    from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+    from io import BytesIO
+    from fastapi.responses import Response
+    
+    doc = Document()
+    
+    # Title
+    title = doc.add_heading(f"Transcription: {filename}", 0)
+    title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+    
+    # Metadata section
+    doc.add_heading("Metadata", level=1)
+    metadata_para = doc.add_paragraph()
+    if transcription.get("language"):
+        metadata_para.add_run(f"Language: ").bold = True
+        metadata_para.add_run(f"{transcription['language']}\n")
+    if transcription.get("duration"):
+        metadata_para.add_run(f"Duration: ").bold = True
+        metadata_para.add_run(f"{transcription['duration']:.2f} seconds\n")
+    if transcription.get("metadata", {}).get("speaker_count"):
+        metadata_para.add_run(f"Speakers: ").bold = True
+        metadata_para.add_run(f"{transcription['metadata']['speaker_count']}\n")
+    
+    # Full transcription
+    doc.add_heading("Full Transcription", level=1)
+    doc.add_paragraph(transcription.get("full_text", ""))
+    
+    # Segments
+    if transcription.get("segments"):
+        doc.add_page_break()
+        doc.add_heading("Detailed Segments", level=1)
+        for segment in transcription["segments"]:
+            para = doc.add_paragraph()
+            # Timestamp
+            timestamp_run = para.add_run(f"[{segment['start_time']:.1f}s - {segment['end_time']:.1f}s] ")
+            timestamp_run.font.color.rgb = RGBColor(0, 102, 204)
+            timestamp_run.bold = True
+            # Speaker
+            if segment.get('speaker_id'):
+                speaker_run = para.add_run(f"{segment['speaker_id']}: ")
+                speaker_run.font.color.rgb = RGBColor(155, 89, 182)
+                speaker_run.bold = True
+            # Text
+            para.add_run(segment['text'])
+    
+    # NLP Analysis
+    if nlp_analysis:
+        doc.add_page_break()
+        doc.add_heading("Content Analysis", level=1)
+        
+        if nlp_analysis.get("sentiment"):
+            doc.add_heading("Sentiment", level=2)
+            doc.add_paragraph(f"Overall: {nlp_analysis['sentiment'].get('overall', 'N/A')}")
+        
+        if nlp_analysis.get("key_phrases"):
+            doc.add_heading("Key Phrases", level=2)
+            for phrase in nlp_analysis["key_phrases"][:MAX_KEY_PHRASES_EXPORT]:
+                doc.add_paragraph(phrase['text'], style='List Bullet')
+    
+    # Save to BytesIO
+    bio = BytesIO()
+    doc.save(bio)
+    bio.seek(0)
+    
+    return Response(
+        content=bio.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename.rsplit('.', 1)[0]}.docx"}
+    )
+
+
+def export_as_pdf(transcription: Dict[str, Any], nlp_analysis: Optional[Dict[str, Any]], filename: str):
+    """Export transcription as PDF document."""
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
+    from io import BytesIO
+    from fastapi.responses import Response
+    
+    bio = BytesIO()
+    doc = SimpleDocTemplate(bio, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+    story = []
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor='#667eea',
+        alignment=TA_CENTER,
+        spaceAfter=12
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor='#667eea',
+        spaceAfter=8
+    )
+    
+    # Title
+    story.append(Paragraph(f"Transcription: {filename}", title_style))
+    story.append(Spacer(1, 0.2*inch))
+    
+    # Metadata
+    story.append(Paragraph("Metadata", heading_style))
+    metadata_text = ""
+    if transcription.get("language"):
+        metadata_text += f"<b>Language:</b> {transcription['language']}<br/>"
+    if transcription.get("duration"):
+        metadata_text += f"<b>Duration:</b> {transcription['duration']:.2f} seconds<br/>"
+    if transcription.get("metadata", {}).get("speaker_count"):
+        metadata_text += f"<b>Speakers:</b> {transcription['metadata']['speaker_count']}<br/>"
+    story.append(Paragraph(metadata_text, styles['Normal']))
+    story.append(Spacer(1, 0.2*inch))
+    
+    # Full transcription
+    story.append(Paragraph("Full Transcription", heading_style))
+    story.append(Paragraph(transcription.get("full_text", ""), styles['Normal']))
+    story.append(PageBreak())
+    
+    # Segments
+    if transcription.get("segments"):
+        story.append(Paragraph("Detailed Segments", heading_style))
+        for segment in transcription["segments"]:
+            timestamp = f"[{segment['start_time']:.1f}s - {segment['end_time']:.1f}s]"
+            speaker = f"<b>{segment.get('speaker_id', 'Unknown')}:</b> " if segment.get('speaker_id') else ""
+            text = f'<font color="#3498db">{timestamp}</font> {speaker}{segment["text"]}'
+            story.append(Paragraph(text, styles['Normal']))
+            story.append(Spacer(1, 0.05*inch))
+    
+    # NLP Analysis
+    if nlp_analysis:
+        story.append(PageBreak())
+        story.append(Paragraph("Content Analysis", heading_style))
+        
+        if nlp_analysis.get("sentiment"):
+            story.append(Paragraph("Sentiment", styles['Heading3']))
+            story.append(Paragraph(f"Overall: {nlp_analysis['sentiment'].get('overall', 'N/A')}", styles['Normal']))
+            story.append(Spacer(1, 0.1*inch))
+        
+        if nlp_analysis.get("key_phrases"):
+            story.append(Paragraph("Key Phrases", styles['Heading3']))
+            phrases = ", ".join([phrase['text'] for phrase in nlp_analysis["key_phrases"][:MAX_KEY_PHRASES_EXPORT]])
+            story.append(Paragraph(phrases, styles['Normal']))
+    
+    # Build PDF
+    doc.build(story)
+    bio.seek(0)
+    
+    return Response(
+        content=bio.getvalue(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename.rsplit('.', 1)[0]}.pdf"}
+    )
 
 
 if __name__ == "__main__":

@@ -16,6 +16,11 @@ fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 
+# Export functionality
+python-docx==1.1.0
+reportlab==4.1.0
+Pillow==12.1.1
+
 # Whisper transcription
 openai-whisper==20231117
 openai==1.10.0

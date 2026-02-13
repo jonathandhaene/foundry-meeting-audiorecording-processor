@@ -1,8 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
+import './accessibility.css';
 import LanguageSelector from './LanguageSelector';
+import ProgressBar from './components/ProgressBar';
+import TranscriptSearch from './components/TranscriptSearch';
+import AudioPlayer from './components/AudioPlayer';
+import ExportButton from './components/ExportButton';
+import AccessibilityControls from './components/AccessibilityControls';
 
 function App() {
   const { t } = useTranslation();
@@ -25,7 +33,22 @@ function App() {
         if (job.status === 'pending' || job.status === 'processing') {
           try {
             const response = await axios.get(`/api/jobs/${job.job_id}`);
-            return response.data;
+            const updatedJob = response.data;
+            
+            // Notify user when job completes
+            if (updatedJob.status === 'completed' && job.status !== 'completed') {
+              toast.success(t('notifications.jobCompleted', { 
+                defaultValue: `Transcription completed: ${job.filename}`,
+                filename: job.filename 
+              }));
+            } else if (updatedJob.status === 'failed' && job.status !== 'failed') {
+              toast.error(t('notifications.jobFailed', { 
+                defaultValue: `Transcription failed: ${job.filename}`,
+                filename: job.filename 
+              }));
+            }
+            
+            return updatedJob;
           } catch (error) {
             console.error('Error fetching job status:', error);
             return job;
@@ -35,7 +58,7 @@ function App() {
       })
     );
     setJobs(updatedJobs);
-  }, [jobs]);
+  }, [jobs, t]);
 
   // Poll for job updates
   useEffect(() => {
@@ -102,8 +125,15 @@ function App() {
       if (document.getElementById('termsFileInput')) {
         document.getElementById('termsFileInput').value = '';
       }
+      
+      // Show success notification
+      toast.info(t('notifications.jobStarted', { 
+        defaultValue: 'Transcription started',
+      }));
     } catch (error) {
-      setError(error.response?.data?.detail || t('errors.uploadFailed'));
+      const errorMsg = error.response?.data?.detail || t('errors.uploadFailed');
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -113,14 +143,34 @@ function App() {
     try {
       await axios.delete(`/api/jobs/${jobId}`);
       setJobs(jobs.filter(job => job.job_id !== jobId));
+      toast.success(t('notifications.jobDeleted', { defaultValue: 'Job deleted successfully' }));
     } catch (error) {
       console.error('Error deleting job:', error);
+      toast.error(t('notifications.jobDeleteFailed', { defaultValue: 'Failed to delete job' }));
     }
   };
 
   return (
     <div className="App">
-      <header className="App-header">
+      {/* Skip to content link for keyboard navigation */}
+      <a href="#main-content" className="skip-to-content">
+        {t('accessibility.skipToContent', { defaultValue: 'Skip to main content' })}
+      </a>
+      
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        role="alert"
+        aria-live="polite"
+      />
+      <header className="App-header" role="banner">
         <div className="header-content">
           <div className="header-text">
             <h1>{t('app.title')}</h1>
@@ -130,10 +180,10 @@ function App() {
         </div>
       </header>
 
-      <div className="container">
-        <div className="upload-section">
-          <h2>{t('upload.title')}</h2>
-          <form onSubmit={handleSubmit}>
+      <main id="main-content" className="container" role="main">
+        <section className="upload-section" aria-labelledby="upload-heading">
+          <h2 id="upload-heading">{t('upload.title')}</h2>
+          <form onSubmit={handleSubmit} aria-label={t('upload.formLabel', { defaultValue: 'Transcription configuration form' })}>
             <div className="form-group">
               <label htmlFor="fileInput">{t('upload.audioFile')}</label>
               <input
@@ -142,8 +192,10 @@ function App() {
                 accept="audio/*"
                 onChange={handleFileChange}
                 className="file-input"
+                aria-required="true"
+                aria-describedby={file ? "file-selected-info" : undefined}
               />
-              {file && <p className="file-info">{t('upload.fileSelected', { filename: file.name })}</p>}
+              {file && <p id="file-selected-info" className="file-info">{t('upload.fileSelected', { filename: file.name })}</p>}
             </div>
 
             <div className="form-group">
@@ -257,38 +309,69 @@ function App() {
               </label>
             </div>
 
-            {error && <div className="error">{error}</div>}
+            {error && <div className="error" role="alert" aria-live="assertive">{error}</div>}
 
-            <button type="submit" disabled={loading || !file} className="submit-button">
+            <button 
+              type="submit" 
+              disabled={loading || !file} 
+              className="submit-button"
+              aria-label={loading ? t('upload.uploadingButton') : t('upload.uploadButton')}
+            >
               {loading ? t('upload.uploadingButton') : t('upload.uploadButton')}
             </button>
           </form>
-        </div>
+        </section>
 
-        <div className="jobs-section">
-          <h2>{t('jobs.title')}</h2>
+        <section className="jobs-section" aria-labelledby="jobs-heading">
+          <h2 id="jobs-heading">{t('jobs.title')}</h2>
           {jobs.length === 0 ? (
             <p className="no-jobs">{t('jobs.noJobs')}</p>
           ) : (
-            <div className="jobs-list">
+            <div className="jobs-list" role="list">
               {jobs.map((job) => (
-                <div key={job.job_id} className={`job-card ${job.status}`}>
+                <article key={job.job_id} className={`job-card ${job.status}`} role="listitem">
                   <div className="job-header">
                     <h3>{job.filename}</h3>
-                    <span className={`status-badge ${job.status}`}>
+                    <span className={`status-badge ${job.status}`} role="status" aria-label={t(`status.${job.status}`)}>
                       {t(`status.${job.status}`)}
                     </span>
                   </div>
                   <div className="job-info">
                     <p><strong>{t('jobs.method')}</strong> {job.method}</p>
                     <p><strong>{t('jobs.id')}</strong> {job.job_id}</p>
-                    {job.progress && <p><strong>{t('jobs.progress')}</strong> {job.progress}</p>}
                     {job.error && <p className="error"><strong>{t('jobs.error')}</strong> {job.error}</p>}
                   </div>
                   
+                  {/* Show progress bar for pending/processing jobs */}
+                  {(job.status === 'pending' || job.status === 'processing') && (
+                    <ProgressBar progress={job.progress} status={job.status} />
+                  )}
+                  
                   {job.status === 'completed' && job.result && (
                     <div className="results">
-                      <h4>{t('results.title')}</h4>
+                      {/* Export button */}
+                      <div className="results-header">
+                        <h4>{t('results.title')}</h4>
+                        <ExportButton 
+                          jobId={job.job_id}
+                          transcription={job.result.transcription}
+                          nlpAnalysis={job.result.nlp_analysis}
+                          filename={job.filename}
+                        />
+                      </div>
+                      
+                      {/* Audio Player */}
+                      <AudioPlayer 
+                        jobId={job.job_id}
+                        segments={job.result.transcription.segments}
+                      />
+                      
+                      {/* Transcript Search */}
+                      <TranscriptSearch 
+                        transcript={job.result.transcription.full_text}
+                        segments={job.result.transcription.segments}
+                      />
+                      
                       <div className="transcription-text">
                         {job.result.transcription.full_text}
                       </div>
@@ -358,12 +441,15 @@ function App() {
                   <button onClick={() => deleteJob(job.job_id)} className="delete-button">
                     {t('jobs.deleteButton')}
                   </button>
-                </div>
+                </article>
               ))}
             </div>
           )}
-        </div>
-      </div>
+        </section>
+      </main>
+      
+      {/* Accessibility Controls */}
+      <AccessibilityControls />
     </div>
   );
 }

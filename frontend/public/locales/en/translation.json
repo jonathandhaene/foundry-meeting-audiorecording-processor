@@ -76,6 +76,44 @@
     "noFile": "Please select an audio file",
     "uploadFailed": "Failed to submit transcription job"
   },
+  "notifications": {
+    "jobStarted": "Transcription started",
+    "jobCompleted": "Transcription completed: {{filename}}",
+    "jobFailed": "Transcription failed: {{filename}}",
+    "jobDeleted": "Job deleted successfully",
+    "jobDeleteFailed": "Failed to delete job"
+  },
+  "export": {
+    "button": "Export",
+    "exporting": "Exporting...",
+    "error": "Export failed. Please try again.",
+    "formats": {
+      "txt": "Plain Text (.txt)",
+      "docx": "Word Document (.docx)",
+      "pdf": "PDF Document (.pdf)"
+    }
+  },
+  "audio": {
+    "play": "Play",
+    "pause": "Pause",
+    "seek": "Seek",
+    "volume": "Volume"
+  },
+  "accessibility": {
+    "skipToContent": "Skip to main content",
+    "toggleControls": "Toggle accessibility controls",
+    "settings": "Accessibility Settings",
+    "title": "Accessibility",
+    "fontSize": "Font Size",
+    "fontNormal": "Normal",
+    "fontLarge": "Large",
+    "fontXLarge": "Extra Large",
+    "highContrast": "High Contrast Mode",
+    "keyboardInfo": "Use Tab to navigate, Enter to activate buttons"
+  },
+  "upload": {
+    "formLabel": "Transcription configuration form"
+  },
   "languageSelector": {
     "label": "Language:",
     "tooltip": "Select your preferred language"
