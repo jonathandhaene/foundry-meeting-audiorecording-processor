@@ -4,11 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
+import './accessibility.css';
 import LanguageSelector from './LanguageSelector';
 import ProgressBar from './components/ProgressBar';
 import TranscriptSearch from './components/TranscriptSearch';
 import AudioPlayer from './components/AudioPlayer';
 import ExportButton from './components/ExportButton';
+import AccessibilityControls from './components/AccessibilityControls';
 
 function App() {
   const { t } = useTranslation();
@@ -24,7 +26,6 @@ function App() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [expandedJobs, setExpandedJobs] = useState(new Set());
 
   const updateJobs = useCallback(async () => {
     const updatedJobs = await Promise.all(
@@ -149,18 +150,13 @@ function App() {
     }
   };
 
-  const toggleJobExpansion = (jobId) => {
-    const newExpanded = new Set(expandedJobs);
-    if (newExpanded.has(jobId)) {
-      newExpanded.delete(jobId);
-    } else {
-      newExpanded.add(jobId);
-    }
-    setExpandedJobs(newExpanded);
-  };
-
   return (
     <div className="App">
+      {/* Skip to content link for keyboard navigation */}
+      <a href="#main-content" className="skip-to-content">
+        {t('accessibility.skipToContent', { defaultValue: 'Skip to main content' })}
+      </a>
+      
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -171,8 +167,10 @@ function App() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
+        role="alert"
+        aria-live="polite"
       />
-      <header className="App-header">
+      <header className="App-header" role="banner">
         <div className="header-content">
           <div className="header-text">
             <h1>{t('app.title')}</h1>
@@ -182,10 +180,10 @@ function App() {
         </div>
       </header>
 
-      <div className="container">
-        <div className="upload-section">
-          <h2>{t('upload.title')}</h2>
-          <form onSubmit={handleSubmit}>
+      <main id="main-content" className="container" role="main">
+        <section className="upload-section" aria-labelledby="upload-heading">
+          <h2 id="upload-heading">{t('upload.title')}</h2>
+          <form onSubmit={handleSubmit} aria-label={t('upload.formLabel', { defaultValue: 'Transcription configuration form' })}>
             <div className="form-group">
               <label htmlFor="fileInput">{t('upload.audioFile')}</label>
               <input
@@ -194,8 +192,10 @@ function App() {
                 accept="audio/*"
                 onChange={handleFileChange}
                 className="file-input"
+                aria-required="true"
+                aria-describedby={file ? "file-selected-info" : undefined}
               />
-              {file && <p className="file-info">{t('upload.fileSelected', { filename: file.name })}</p>}
+              {file && <p id="file-selected-info" className="file-info">{t('upload.fileSelected', { filename: file.name })}</p>}
             </div>
 
             <div className="form-group">
@@ -309,25 +309,30 @@ function App() {
               </label>
             </div>
 
-            {error && <div className="error">{error}</div>}
+            {error && <div className="error" role="alert" aria-live="assertive">{error}</div>}
 
-            <button type="submit" disabled={loading || !file} className="submit-button">
+            <button 
+              type="submit" 
+              disabled={loading || !file} 
+              className="submit-button"
+              aria-label={loading ? t('upload.uploadingButton') : t('upload.uploadButton')}
+            >
               {loading ? t('upload.uploadingButton') : t('upload.uploadButton')}
             </button>
           </form>
-        </div>
+        </section>
 
-        <div className="jobs-section">
-          <h2>{t('jobs.title')}</h2>
+        <section className="jobs-section" aria-labelledby="jobs-heading">
+          <h2 id="jobs-heading">{t('jobs.title')}</h2>
           {jobs.length === 0 ? (
             <p className="no-jobs">{t('jobs.noJobs')}</p>
           ) : (
-            <div className="jobs-list">
+            <div className="jobs-list" role="list">
               {jobs.map((job) => (
-                <div key={job.job_id} className={`job-card ${job.status}`}>
+                <article key={job.job_id} className={`job-card ${job.status}`} role="listitem">
                   <div className="job-header">
                     <h3>{job.filename}</h3>
-                    <span className={`status-badge ${job.status}`}>
+                    <span className={`status-badge ${job.status}`} role="status" aria-label={t(`status.${job.status}`)}>
                       {t(`status.${job.status}`)}
                     </span>
                   </div>
@@ -436,12 +441,15 @@ function App() {
                   <button onClick={() => deleteJob(job.job_id)} className="delete-button">
                     {t('jobs.deleteButton')}
                   </button>
-                </div>
+                </article>
               ))}
             </div>
           )}
-        </div>
-      </div>
+        </section>
+      </main>
+      
+      {/* Accessibility Controls */}
+      <AccessibilityControls />
     </div>
   );
 }

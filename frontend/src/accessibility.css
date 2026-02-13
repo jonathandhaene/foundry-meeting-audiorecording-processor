@@ -1,0 +1,142 @@
+/* Accessibility Enhancements */
+
+/* Focus indicators */
+*:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Skip to content link */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 1em;
+  background-color: #667eea;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+.skip-to-content:focus {
+  left: 50%;
+  transform: translateX(-50%);
+  top: 1em;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .App {
+    border: 2px solid currentColor;
+  }
+  
+  button,
+  input,
+  select,
+  textarea {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .progress-bar-shimmer {
+    animation: none;
+  }
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Keyboard navigation indicators */
+.keyboard-navigation :focus {
+  outline: 3px solid #667eea;
+  outline-offset: 3px;
+}
+
+/* Color contrast improvements */
+.text-muted {
+  color: #595959;
+}
+
+/* Font size controls */
+.font-size-normal {
+  font-size: 1rem;
+}
+
+.font-size-large {
+  font-size: 1.125rem;
+}
+
+.font-size-xlarge {
+  font-size: 1.25rem;
+}
+
+/* Ensure minimum touch target size (44x44px for mobile) */
+@media (max-width: 768px) {
+  button,
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Link styling for better visibility */
+a {
+  color: #667eea;
+  text-decoration: underline;
+}
+
+a:hover {
+  color: #5568d3;
+  text-decoration: underline;
+}
+
+a:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Form field error states for screen readers */
+.error[role="alert"] {
+  font-weight: 600;
+}
+
+/* Loading state announcements */
+.loading-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
