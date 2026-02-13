@@ -92,6 +92,14 @@ class TranscriptionRequest(BaseModel):
         default=True,
         description="Enable NLP analysis (key phrases, sentiment, etc.)"
     )
+    custom_terms: Optional[str] = Field(
+        default=None,
+        description="Comma-separated list of custom terms for improved recognition"
+    )
+    language_candidates: Optional[str] = Field(
+        default=None,
+        description="Comma-separated list of language codes for multi-language support (e.g., 'en-US,nl-NL')"
+    )
 
 
 class JobResponse(BaseModel):
@@ -137,7 +145,10 @@ async def transcribe_audio(
     enable_diarization: bool = Form(default=True),
     chunk_size: Optional[int] = Form(default=None),
     whisper_model: str = Form(default="base"),
-    enable_nlp: bool = Form(default=True)
+    enable_nlp: bool = Form(default=True),
+    custom_terms: Optional[str] = Form(default=None),
+    language_candidates: Optional[str] = Form(default=None),
+    terms_file: Optional[UploadFile] = File(default=None, description="Optional file with custom terms (one per line)")
 ):
     """
     Upload an audio file and start transcription.
@@ -147,7 +158,28 @@ async def transcribe_audio(
     # Generate job ID
     job_id = str(uuid.uuid4())
     
-    # Save uploaded file
+    # Parse custom terms from text input or file
+    terms_list = []
+    if custom_terms:
+        # Split by comma or newline and clean up
+        terms_list = [term.strip() for term in custom_terms.replace('\n', ',').split(',') if term.strip()]
+    
+    # If terms file is uploaded, read and parse it
+    if terms_file:
+        try:
+            terms_content = await terms_file.read()
+            terms_text = terms_content.decode('utf-8')
+            file_terms = [term.strip() for term in terms_text.split('\n') if term.strip()]
+            terms_list.extend(file_terms)
+        except Exception as e:
+            logger.warning(f"Failed to read terms file: {e}")
+    
+    # Parse language candidates
+    lang_candidates_list = []
+    if language_candidates:
+        lang_candidates_list = [lang.strip() for lang in language_candidates.split(',') if lang.strip()]
+    
+    # Save uploaded audio file
     file_path = TEMP_DIR / f"{job_id}_{file.filename}"
     try:
         with open(file_path, "wb") as f:
@@ -169,6 +201,8 @@ async def transcribe_audio(
         "chunk_size": chunk_size,
         "whisper_model": whisper_model,
         "enable_nlp": enable_nlp,
+        "custom_terms": terms_list,
+        "language_candidates": lang_candidates_list,
         "created_at": datetime.utcnow().isoformat(),
         "updated_at": datetime.utcnow().isoformat(),
         "result": None,
@@ -185,7 +219,9 @@ async def transcribe_audio(
         enable_diarization=enable_diarization,
         chunk_size=chunk_size,
         whisper_model=whisper_model,
-        enable_nlp=enable_nlp
+        enable_nlp=enable_nlp,
+        custom_terms=terms_list,
+        language_candidates=lang_candidates_list
     )
     
     return JobResponse(
@@ -266,7 +302,9 @@ def process_transcription(
     enable_diarization: bool,
     chunk_size: Optional[int],
     whisper_model: str,
-    enable_nlp: bool
+    enable_nlp: bool,
+    custom_terms: Optional[List[str]] = None,
+    language_candidates: Optional[List[str]] = None
 ):
     """
     Background task to process transcription.
@@ -293,7 +331,9 @@ def process_transcription(
                 speech_key=config.azure_speech_key,
                 speech_region=config.azure_speech_region,
                 language=language or config.default_language,
-                enable_diarization=enable_diarization
+                enable_diarization=enable_diarization,
+                custom_terms=custom_terms,
+                language_candidates=language_candidates
             )
             transcription_result = transcriber.transcribe_audio(processed_path)
         
@@ -301,7 +341,8 @@ def process_transcription(
             transcriber = WhisperTranscriber(
                 model_size=whisper_model,
                 language=language,
-                use_api=False
+                use_api=False,
+                custom_terms=custom_terms
             )
             transcription_result = transcriber.transcribe_audio(
                 processed_path,
@@ -316,7 +357,8 @@ def process_transcription(
             transcriber = WhisperTranscriber(
                 language=language,
                 use_api=True,
-                api_key=openai_key
+                api_key=openai_key,
+                custom_terms=custom_terms
             )
             transcription_result = transcriber.transcribe_audio(processed_path)
         

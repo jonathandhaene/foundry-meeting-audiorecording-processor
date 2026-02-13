@@ -9,6 +9,9 @@ function App() {
   const [enableDiarization, setEnableDiarization] = useState(true);
   const [whisperModel, setWhisperModel] = useState('base');
   const [enableNlp, setEnableNlp] = useState(true);
+  const [customTerms, setCustomTerms] = useState('');
+  const [termsFile, setTermsFile] = useState(null);
+  const [languageCandidates, setLanguageCandidates] = useState('');
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -46,6 +49,10 @@ function App() {
     setError('');
   };
 
+  const handleTermsFileChange = (e) => {
+    setTermsFile(e.target.files[0]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -64,6 +71,9 @@ function App() {
     formData.append('enable_diarization', enableDiarization);
     formData.append('whisper_model', whisperModel);
     formData.append('enable_nlp', enableNlp);
+    if (customTerms) formData.append('custom_terms', customTerms);
+    if (termsFile) formData.append('terms_file', termsFile);
+    if (languageCandidates) formData.append('language_candidates', languageCandidates);
 
     try {
       const response = await axios.post('/api/transcribe', formData, {
@@ -82,7 +92,13 @@ function App() {
 
       setJobs([newJob, ...jobs]);
       setFile(null);
+      setTermsFile(null);
+      setCustomTerms('');
+      setLanguageCandidates('');
       document.getElementById('fileInput').value = '';
+      if (document.getElementById('termsFileInput')) {
+        document.getElementById('termsFileInput').value = '';
+      }
     } catch (error) {
       setError(error.response?.data?.detail || 'Failed to submit transcription job');
     } finally {
@@ -166,6 +182,51 @@ function App() {
               />
             </div>
 
+            <div className="form-group">
+              <label htmlFor="languageCandidates">Multi-language Support (optional):</label>
+              <input
+                id="languageCandidates"
+                type="text"
+                value={languageCandidates}
+                onChange={(e) => setLanguageCandidates(e.target.value)}
+                placeholder="e.g., en-US,nl-NL for Dutch with English"
+                className="text-input"
+              />
+              <small className="help-text">
+                Enter comma-separated language codes for mixed-language transcription (Azure only)
+              </small>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="customTerms">Custom Terms (optional):</label>
+              <textarea
+                id="customTerms"
+                value={customTerms}
+                onChange={(e) => setCustomTerms(e.target.value)}
+                placeholder="Enter custom terms separated by commas or new lines&#10;e.g., Kubernetes, Azure DevOps, MLOps"
+                className="text-input"
+                rows="4"
+              />
+              <small className="help-text">
+                Add technical terms, proper nouns, or domain-specific vocabulary to improve recognition accuracy
+              </small>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="termsFileInput">Or Upload Terms File (optional):</label>
+              <input
+                id="termsFileInput"
+                type="file"
+                accept=".txt,.csv"
+                onChange={handleTermsFileChange}
+                className="file-input"
+              />
+              {termsFile && <p className="file-info">Terms file: {termsFile.name}</p>}
+              <small className="help-text">
+                Upload a text file with one term per line
+              </small>
+            </div>
+
             <div className="form-group checkbox-group">
               <label>
                 <input
@@ -230,6 +291,13 @@ function App() {
                           <p><strong>Language:</strong> {job.result.transcription.language}</p>
                           {job.result.transcription.metadata.speaker_count && (
                             <p><strong>Speakers:</strong> {job.result.transcription.metadata.speaker_count}</p>
+                          )}
+                          {job.result.transcription.metadata.custom_terms_count > 0 && (
+                            <p><strong>Custom Terms Applied:</strong> {job.result.transcription.metadata.custom_terms_count}</p>
+                          )}
+                          {job.result.transcription.metadata.language_candidates && 
+                           job.result.transcription.metadata.language_candidates.length > 0 && (
+                            <p><strong>Multi-language:</strong> {job.result.transcription.metadata.language_candidates.join(', ')}</p>
                           )}
                         </div>
                       )}

@@ -9,9 +9,16 @@ A comprehensive end-to-end solution for processing meeting audio files with mult
   - Azure Speech Services (with speaker diarization)
   - OpenAI Whisper (local or API)
   - Configurable options for each method
+- **Custom Terminology Support**: 
+  - Define domain-specific vocabulary for improved accuracy
+  - Support for technical jargon, proper nouns, and industry terms
+  - Works with both Azure and Whisper engines
+- **Multi-language Transcription**:
+  - Handle audio with multiple languages (e.g., Dutch with English terms)
+  - Automatic language detection from candidate list
+  - Optimized for mixed-language content
 - **Audio Preprocessing**: Automatic normalization and noise reduction using FFmpeg
 - **Speaker Diarization**: Multi-speaker identification (Azure)
-- **Multilingual Support**: Auto-detection or specify language
 - **Content Understanding**: Azure Text Analytics for:
   - Key phrase extraction
   - Sentiment analysis
@@ -183,10 +190,20 @@ The Web UI will open at `http://localhost:3000`
 1. Upload an audio file
 2. Select transcription method (Azure, Whisper Local, or Whisper API)
 3. Configure options (language, diarization, model size)
-4. Click "Transcribe"
-5. View results in real-time
+4. **Optional**: Add custom terms for better accuracy (comma-separated or upload file)
+5. **Optional**: Enable multi-language support (for mixed-language content)
+6. Click "Transcribe"
+7. View results in real-time
 
 For detailed UI usage instructions, see [docs/UI_USAGE.md](docs/UI_USAGE.md)
+
+**New Feature: Custom Terms & Multi-language Support**
+
+Improve transcription accuracy for domain-specific content:
+- Define technical terminology, proper nouns, and industry jargon
+- Handle mixed-language audio (e.g., Dutch with English technical terms)
+
+See the [Custom Terms Guide](docs/CUSTOM_TERMS_GUIDE.md) for detailed instructions and examples.
 
 ### Option 2: Command Line Usage
 
@@ -211,24 +228,40 @@ python -m meeting_processor.pipeline audio_file.wav --skip-preprocessing
 ### Python API Usage
 
 ```python
-from meeting_processor.pipeline import MeetingProcessor
-from meeting_processor.utils import ConfigManager
+from meeting_processor.transcription import AzureSpeechTranscriber, WhisperTranscriber
 
-# Initialize processor
-config = ConfigManager()
-processor = MeetingProcessor(config)
+# Example 1: Azure Speech with custom terms
+custom_terms = ["Kubernetes", "Docker", "MLOps", "Azure DevOps"]
 
-# Process audio file
-results = processor.process_audio_file(
-    "meeting.wav",
-    output_dir="./output"
+azure_transcriber = AzureSpeechTranscriber(
+    speech_key="your_key",
+    speech_region="eastus",
+    custom_terms=custom_terms
 )
+result = azure_transcriber.transcribe_audio("meeting.wav")
+
+# Example 2: Multi-language support (Dutch with English terms)
+azure_transcriber = AzureSpeechTranscriber(
+    speech_key="your_key",
+    speech_region="eastus",
+    language_candidates=["nl-NL", "en-US"],
+    custom_terms=["API", "Docker", "Kubernetes"]
+)
+result = azure_transcriber.transcribe_audio("meeting.wav")
+
+# Example 3: Whisper with custom terms
+whisper_transcriber = WhisperTranscriber(
+    model_size="base",
+    custom_terms=["Terraform", "CI/CD", "GitOps"]
+)
+result = whisper_transcriber.transcribe_audio("meeting.wav")
 
 # Access results
-print("Transcription:", results["transcription"]["full_text"])
-print("Key Topics:", results["summary"]["topics"])
-print("Action Items:", results["summary"]["action_items"])
+print("Transcription:", result.full_text)
+print("Custom terms used:", result.metadata["custom_terms_count"])
 ```
+
+For more examples, see the [Custom Terms Guide](docs/CUSTOM_TERMS_GUIDE.md).
 
 ### Batch Processing
 

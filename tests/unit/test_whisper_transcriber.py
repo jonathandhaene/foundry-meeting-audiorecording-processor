@@ -217,3 +217,119 @@ class TestWhisperTranscriber:
         call_args = mock_openai.Audio.transcribe.call_args
         assert call_args[1]["language"] == "fr"
         assert result.language == "fr"
+
+    @patch('meeting_processor.transcription.whisper_transcriber.whisper', create=True)
+    def test_custom_terms_initialization(self, mock_whisper):
+        """Test initialization with custom terms."""
+        mock_whisper.load_model.return_value = Mock()
+        
+        custom_terms = ["Kubernetes", "MLOps", "Azure"]
+        transcriber = WhisperTranscriber(
+            model_size="base",
+            custom_terms=custom_terms,
+            use_api=False
+        )
+        
+        assert transcriber.custom_terms == custom_terms
+        assert len(transcriber.custom_terms) == 3
+
+    @patch('meeting_processor.transcription.whisper_transcriber.whisper', create=True)
+    def test_generate_initial_prompt(self, mock_whisper):
+        """Test generating initial prompt from custom terms."""
+        mock_whisper.load_model.return_value = Mock()
+        
+        custom_terms = ["Docker", "Kubernetes", "Terraform"]
+        transcriber = WhisperTranscriber(
+            model_size="base",
+            custom_terms=custom_terms,
+            use_api=False
+        )
+        
+        prompt = transcriber._generate_initial_prompt()
+        
+        assert "Docker" in prompt
+        assert "Kubernetes" in prompt
+        assert "Terraform" in prompt
+        assert len(prompt) > 0
+
+    @patch('meeting_processor.transcription.whisper_transcriber.whisper', create=True)
+    def test_generate_initial_prompt_empty(self, mock_whisper):
+        """Test generating initial prompt with no custom terms."""
+        mock_whisper.load_model.return_value = Mock()
+        
+        transcriber = WhisperTranscriber(
+            model_size="base",
+            custom_terms=[],
+            use_api=False
+        )
+        
+        prompt = transcriber._generate_initial_prompt()
+        
+        assert prompt == ""
+
+    @patch('meeting_processor.transcription.whisper_transcriber.whisper', create=True)
+    def test_transcribe_with_custom_terms(self, mock_whisper):
+        """Test transcription with custom terms."""
+        mock_model = Mock()
+        mock_result = {
+            "text": "Using Kubernetes and Docker",
+            "language": "en",
+            "segments": [
+                {
+                    "text": "Using Kubernetes and Docker",
+                    "start": 0.0,
+                    "end": 3.0,
+                    "words": []
+                }
+            ]
+        }
+        mock_model.transcribe.return_value = mock_result
+        mock_whisper.load_model.return_value = mock_model
+        
+        custom_terms = ["Kubernetes", "Docker"]
+        transcriber = WhisperTranscriber(
+            model_size="base",
+            custom_terms=custom_terms,
+            use_api=False
+        )
+        result = transcriber.transcribe_audio("test.wav")
+        
+        # Verify custom terms were used in initial prompt
+        call_args = mock_model.transcribe.call_args
+        assert "initial_prompt" in call_args[1]
+        assert "Kubernetes" in call_args[1]["initial_prompt"]
+        assert "Docker" in call_args[1]["initial_prompt"]
+        
+        # Verify metadata includes custom terms count
+        assert result.metadata["custom_terms_count"] == 2
+
+    @patch('meeting_processor.transcription.whisper_transcriber.openai', create=True)
+    def test_transcribe_api_with_custom_terms(self, mock_openai):
+        """Test API transcription with custom terms."""
+        mock_response = {
+            "text": "Using Azure DevOps",
+            "language": "en",
+            "duration": 2.0,
+            "segments": []
+        }
+        mock_openai.Audio.transcribe.return_value = mock_response
+        
+        custom_terms = ["Azure DevOps"]
+        transcriber = WhisperTranscriber(
+            custom_terms=custom_terms,
+            use_api=True,
+            api_key="test_key"
+        )
+        
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value.__enter__.return_value = Mock()
+            result = transcriber.transcribe_audio("test.wav")
+        
+        # Verify prompt parameter was passed to API
+        call_args = mock_openai.Audio.transcribe.call_args
+        assert "prompt" in call_args[1]
+        assert "Azure DevOps" in call_args[1]["prompt"]
+        
+        # Verify metadata includes custom terms count
+        assert result.metadata["custom_terms_count"] == 1
+
