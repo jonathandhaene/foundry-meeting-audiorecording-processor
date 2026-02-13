@@ -3,18 +3,29 @@ import './ProgressBar.css';
 
 function ProgressBar({ progress, status }) {
   // Extract percentage from progress string if it contains one
+  // or calculate based on status
   const extractPercentage = (progressText) => {
     if (!progressText) return 0;
+    
+    // First, try to extract explicit percentage
     const match = progressText.match(/(\d+)%/);
     if (match) {
       return parseInt(match[1], 10);
     }
-    // Map status to approximate percentages
-    if (progressText.includes('Starting')) return 5;
-    if (progressText.includes('Preprocessing')) return 20;
-    if (progressText.includes('Transcribing')) return 50;
-    if (progressText.includes('Analyzing')) return 80;
-    if (progressText.includes('Completed')) return 100;
+    
+    // Fallback: Map common progress keywords to approximate percentages
+    // This is language-independent as it checks for common English keywords
+    const lowerText = progressText.toLowerCase();
+    if (lowerText.includes('start') || lowerText.includes('initial')) return 5;
+    if (lowerText.includes('preprocess')) return 20;
+    if (lowerText.includes('transcrib')) return 50;
+    if (lowerText.includes('analyz')) return 80;
+    if (lowerText.includes('complet')) return 100;
+    
+    // If no match, return a default based on status
+    if (status === 'processing') return 50;
+    if (status === 'completed') return 100;
+    
     return 0;
   };
 

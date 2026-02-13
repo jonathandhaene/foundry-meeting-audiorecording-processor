@@ -121,6 +121,14 @@
   z-index: 10;
 }
 
+.timeline-note {
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #888;
+  font-style: italic;
+}
+
 @media (max-width: 768px) {
   .player-controls {
     flex-wrap: wrap;

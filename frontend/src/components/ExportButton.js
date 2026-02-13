@@ -13,9 +13,17 @@ function ExportButton({ jobId, transcription, nlpAnalysis, filename }) {
     setShowMenu(false);
 
     try {
+      const formData = new FormData();
+      formData.append('format', format);
+      
       const response = await axios.post(`/api/export/${jobId}`, 
-        { format },
-        { responseType: 'blob' }
+        formData,
+        { 
+          responseType: 'blob',
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
       );
 
       // Create download link

@@ -50,6 +50,10 @@ jobs_db: Dict[str, Dict[str, Any]] = {}
 TEMP_DIR = Path(tempfile.gettempdir()) / "meeting_transcription"
 TEMP_DIR.mkdir(exist_ok=True)
 
+# Export constants
+MAX_KEY_PHRASES_EXPORT = 20  # Maximum number of key phrases to include in exports
+MAX_SEGMENTS_TIMELINE = 20   # Maximum number of segments to show in audio timeline
+
 
 class TranscriptionMethod(str, Enum):
     """Available transcription methods."""
@@ -499,7 +503,7 @@ def export_as_txt(transcription: Dict[str, Any], nlp_analysis: Optional[Dict[str
         
         if nlp_analysis.get("key_phrases"):
             output.write("\nKey Phrases:\n")
-            for phrase in nlp_analysis["key_phrases"][:20]:
+            for phrase in nlp_analysis["key_phrases"][:MAX_KEY_PHRASES_EXPORT]:
                 output.write(f"  - {phrase['text']}\n")
     
     content = output.getvalue()
@@ -570,7 +574,7 @@ def export_as_docx(transcription: Dict[str, Any], nlp_analysis: Optional[Dict[st
         
         if nlp_analysis.get("key_phrases"):
             doc.add_heading("Key Phrases", level=2)
-            for phrase in nlp_analysis["key_phrases"][:20]:
+            for phrase in nlp_analysis["key_phrases"][:MAX_KEY_PHRASES_EXPORT]:
                 doc.add_paragraph(phrase['text'], style='List Bullet')
     
     # Save to BytesIO
@@ -661,7 +665,7 @@ def export_as_pdf(transcription: Dict[str, Any], nlp_analysis: Optional[Dict[str
         
         if nlp_analysis.get("key_phrases"):
             story.append(Paragraph("Key Phrases", styles['Heading3']))
-            phrases = ", ".join([phrase['text'] for phrase in nlp_analysis["key_phrases"][:20]])
+            phrases = ", ".join([phrase['text'] for phrase in nlp_analysis["key_phrases"][:MAX_KEY_PHRASES_EXPORT]])
             story.append(Paragraph(phrases, styles['Normal']))
     
     # Build PDF

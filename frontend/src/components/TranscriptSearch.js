@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import './TranscriptSearch.css';
 
+// Configuration
+const MAX_SEARCH_RESULTS = 10; // Initial number of search results to display
+
 function TranscriptSearch({ transcript, segments, onHighlight }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [matchCount, setMatchCount] = useState(0);
   const [currentMatch, setCurrentMatch] = useState(0);
+  const [showAllResults, setShowAllResults] = useState(false);
 
   const handleSearch = (term) => {
     setSearchTerm(term);
@@ -91,7 +95,7 @@ function TranscriptSearch({ transcript, segments, onHighlight }) {
         <div className="search-results">
           {segments.filter(seg => 
             seg.text.toLowerCase().includes(searchTerm.toLowerCase())
-          ).slice(0, 10).map((segment, idx) => (
+          ).slice(0, showAllResults ? undefined : MAX_SEARCH_RESULTS).map((segment, idx) => (
             <div key={idx} className="search-result-item">
               <span className="result-timestamp">[{segment.start_time.toFixed(1)}s]</span>
               {segment.speaker_id && (
@@ -100,6 +104,18 @@ function TranscriptSearch({ transcript, segments, onHighlight }) {
               <span className="result-text">{highlightText(segment.text)}</span>
             </div>
           ))}
+          {!showAllResults && segments.filter(seg => 
+            seg.text.toLowerCase().includes(searchTerm.toLowerCase())
+          ).length > MAX_SEARCH_RESULTS && (
+            <button 
+              className="show-more-button"
+              onClick={() => setShowAllResults(true)}
+            >
+              Show all {segments.filter(seg => 
+                seg.text.toLowerCase().includes(searchTerm.toLowerCase())
+              ).length} results
+            </button>
+          )}
         </div>
       )}
     </div>

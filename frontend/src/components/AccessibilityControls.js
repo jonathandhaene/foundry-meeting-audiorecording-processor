@@ -10,7 +10,11 @@ function AccessibilityControls() {
 
   useEffect(() => {
     // Apply font size to body
-    document.body.className = document.body.className.replace(/font-size-\w+/g, '');
+    // Remove any existing font-size classes
+    const fontSizeClasses = ['font-size-normal', 'font-size-large', 'font-size-xlarge'];
+    fontSizeClasses.forEach(cls => document.body.classList.remove(cls));
+    
+    // Add the new font size class
     document.body.classList.add(`font-size-${fontSize}`);
     
     // Save preference

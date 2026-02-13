@@ -2,6 +2,9 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import './AudioPlayer.css';
 
+// Configuration
+const MAX_TIMELINE_SEGMENTS = 20; // Maximum segments to display on timeline
+
 function AudioPlayer({ jobId, segments, onTimeUpdate }) {
   const { t } = useTranslation();
   const audioRef = useRef(null);
@@ -136,7 +139,7 @@ function AudioPlayer({ jobId, segments, onTimeUpdate }) {
 
       {segments && segments.length > 0 && (
         <div className="segment-timeline">
-          {segments.slice(0, 20).map((segment, idx) => (
+          {segments.slice(0, MAX_TIMELINE_SEGMENTS).map((segment, idx) => (
             <button
               key={idx}
               className="segment-marker"
@@ -150,6 +153,11 @@ function AudioPlayer({ jobId, segments, onTimeUpdate }) {
               )}
             </button>
           ))}
+          {segments.length > MAX_TIMELINE_SEGMENTS && (
+            <div className="timeline-note">
+              Showing {MAX_TIMELINE_SEGMENTS} of {segments.length} segments
+            </div>
+          )}
         </div>
       )}
     </div>
