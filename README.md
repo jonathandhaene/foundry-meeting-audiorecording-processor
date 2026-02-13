@@ -1,27 +1,48 @@
 # Meeting Audio Recording Processor
 
-A comprehensive end-to-end solution for processing meeting audio files with multi-speaker, multilingual conversations. This project integrates Microsoft Azure services including Speech Services and Text Analytics (Content Understanding) to provide transcription, speaker diarization, and content analysis.
+A comprehensive end-to-end solution for processing meeting audio files with multi-speaker, multilingual conversations. This project provides both a **Web UI** and **API** for easy audio transcription using multiple methods (Azure Speech Services, OpenAI Whisper), along with content analysis capabilities.
 
 ## Features
 
+### 🎯 Core Features
+- **Multiple Transcription Methods**:
+  - Azure Speech Services (with speaker diarization)
+  - OpenAI Whisper (local or API)
+  - Configurable options for each method
 - **Audio Preprocessing**: Automatic normalization and noise reduction using FFmpeg
-- **Speech Transcription**: Azure Speech Services integration with:
-  - Multi-speaker diarization
-  - Multilingual support
-  - Overlapping speech handling
-  - Word-level timestamps
+- **Speaker Diarization**: Multi-speaker identification (Azure)
+- **Multilingual Support**: Auto-detection or specify language
 - **Content Understanding**: Azure Text Analytics for:
   - Key phrase extraction
   - Sentiment analysis
   - Entity recognition
   - Action item detection
   - Topic identification
-- **Scalable Deployment**: Azure Functions for serverless processing
+
+### 🖥️ User Interface
+- **Web UI**: Interactive React-based interface for easy file upload and transcription
+- **REST API**: FastAPI backend for programmatic access
+- **Real-time Progress**: Track transcription status and view results instantly
+- **Job Management**: View, compare, and manage multiple transcription jobs
+
+### 🚀 Deployment
+- **Scalable**: Azure Functions for serverless processing
 - **CI/CD Integration**: Automated testing and deployment with GitHub Actions
+- **Docker Support**: Containerized deployment options
 
 ## Architecture
 
 ```
+┌─────────────────┐
+│   Web UI        │ (React Frontend)
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  FastAPI Server │ (REST API)
+└────────┬────────┘
+         │
+         ▼
 ┌─────────────────┐
 │  Audio Input    │
 └────────┬────────┘
@@ -31,34 +52,40 @@ A comprehensive end-to-end solution for processing meeting audio files with mult
 │ Audio Processor │ (FFmpeg normalization)
 └────────┬────────┘
          │
-         ▼
-┌─────────────────┐
-│ Azure Speech    │ (Transcription + Diarization)
-│    Services     │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Azure Text      │ (Content Understanding)
-│   Analytics     │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Structured      │
-│    Output       │
-└─────────────────┘
+         ├──────────────┬──────────────┐
+         ▼              ▼              ▼
+┌──────────────┐  ┌──────────┐  ┌──────────┐
+│Azure Speech  │  │ Whisper  │  │ Whisper  │
+│   Services   │  │  Local   │  │   API    │
+└──────┬───────┘  └─────┬────┘  └─────┬────┘
+       │                │              │
+       └────────────────┴──────────────┘
+                        │
+                        ▼
+                ┌───────────────┐
+                │ Azure Text    │ (Content Understanding)
+                │  Analytics    │
+                └───────┬───────┘
+                        │
+                        ▼
+                ┌───────────────┐
+                │  Structured   │
+                │    Output     │
+                └───────────────┘
+```
 ```
 
 ## Prerequisites
 
 - Python 3.9 or higher
+- Node.js 16+ (for Web UI)
 - FFmpeg (for audio processing)
 - Azure subscription with:
   - Azure Speech Services resource
   - Azure Text Analytics resource
   - (Optional) Azure Storage Account
   - (Optional) Azure Functions app
+- (Optional) OpenAI API key for Whisper API method
 
 ## Installation
 
@@ -96,26 +123,72 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Configure Azure services
+### 4. Configure services
 
-Copy the example environment file and fill in your Azure credentials:
+Copy the example environment file and fill in your credentials:
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your Azure service credentials:
+Edit `.env` with your service credentials:
 
 ```ini
+# Required for Azure Speech Services
 AZURE_SPEECH_KEY=your_speech_service_key
 AZURE_SPEECH_REGION=your_region  # e.g., eastus
+
+# Required for NLP analysis
 AZURE_TEXT_ANALYTICS_KEY=your_text_analytics_key
 AZURE_TEXT_ANALYTICS_ENDPOINT=https://your-resource.cognitiveservices.azure.com/
+
+# Optional: for Whisper API transcription
+OPENAI_API_KEY=your_openai_api_key
+```
+
+### 5. Install Frontend dependencies (for Web UI)
+
+```bash
+cd frontend
+npm install
+cd ..
 ```
 
 ## Quick Start
 
-### Command Line Usage
+### Option 1: Web UI (Recommended)
+
+**Start the backend server:**
+
+```bash
+# Activate virtual environment if not already active
+source venv/bin/activate
+
+# Start FastAPI server
+python -m meeting_processor.api.app
+```
+
+The API will be available at `http://localhost:8000`
+
+**Start the frontend (in a new terminal):**
+
+```bash
+cd frontend
+npm start
+```
+
+The Web UI will open at `http://localhost:3000`
+
+**Using the UI:**
+1. Upload an audio file
+2. Select transcription method (Azure, Whisper Local, or Whisper API)
+3. Configure options (language, diarization, model size)
+4. Click "Transcribe"
+5. View results in real-time
+
+For detailed UI usage instructions, see [docs/UI_USAGE.md](docs/UI_USAGE.md)
+
+### Option 2: Command Line Usage
 
 Process a single audio file:
 
