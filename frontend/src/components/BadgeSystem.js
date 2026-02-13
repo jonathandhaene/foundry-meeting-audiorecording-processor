@@ -81,26 +81,32 @@ function BadgeSystem({ jobs, onNewBadge }) {
     const stats = calculateStats(jobs);
     
     // Check for new badges
+    const newBadges = [];
     badges.forEach(badge => {
       if (badge.condition(stats) && !earnedBadges.includes(badge.id)) {
-        const newBadges = [...earnedBadges, badge.id];
-        setEarnedBadges(newBadges);
-        localStorage.setItem('earnedBadges', JSON.stringify(newBadges));
-        
-        // Show new badge notification
-        setNewBadge(badge);
-        setShowConfetti(true);
-        
-        setTimeout(() => {
-          setNewBadge(null);
-          setShowConfetti(false);
-        }, 5000);
-        
-        if (onNewBadge) {
-          onNewBadge(badge);
-        }
+        newBadges.push(badge);
       }
     });
+    
+    if (newBadges.length > 0) {
+      const updatedBadges = [...earnedBadges, ...newBadges.map(b => b.id)];
+      setEarnedBadges(updatedBadges);
+      localStorage.setItem('earnedBadges', JSON.stringify(updatedBadges));
+      
+      // Show first new badge notification (could be enhanced to show all sequentially)
+      const firstBadge = newBadges[0];
+      setNewBadge(firstBadge);
+      setShowConfetti(true);
+      
+      setTimeout(() => {
+        setNewBadge(null);
+        setShowConfetti(false);
+      }, 5000);
+      
+      if (onNewBadge) {
+        newBadges.forEach(badge => onNewBadge(badge));
+      }
+    }
   }, [jobs, earnedBadges, onNewBadge]);
 
   const calculateStats = (jobs) => {

@@ -105,7 +105,7 @@
 
 @media (max-width: 768px) {
   .did-you-know {
-    bottom: 1rem;
+    bottom: 5rem;
     left: 1rem;
     right: 1rem;
     transform: translateX(0) translateY(150%);
