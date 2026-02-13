@@ -1,0 +1,83 @@
+{
+  "app": {
+    "title": "Transkrypcja Audio Spotkań",
+    "subtitle": "Prześlij pliki audio i transkrybuj za pomocą Azure Speech lub Whisper"
+  },
+  "upload": {
+    "title": "Prześlij i Skonfiguruj",
+    "audioFile": "Plik Audio:",
+    "fileSelected": "Wybrano: {{filename}}",
+    "method": "Metoda Transkrypcji:",
+    "whisperModel": "Model Whisper:",
+    "language": "Język (opcjonalnie):",
+    "languagePlaceholder": "np. en-US, es-ES (pozostaw puste dla automatycznego wykrywania)",
+    "languageCandidates": "Obsługa Wielojęzyczna (opcjonalnie):",
+    "languageCandidatesPlaceholder": "np. en-US,nl-NL dla holenderskiego z angielskim",
+    "languageCandidatesHelp": "Wprowadź kody językowe oddzielone przecinkami dla transkrypcji wielojęzycznej (tylko Azure)",
+    "customTerms": "Terminy Niestandardowe (opcjonalnie):",
+    "customTermsPlaceholder": "Wprowadź terminy niestandardowe oddzielone przecinkami lub nowymi liniami\nnp. Kubernetes, Azure DevOps, MLOps",
+    "customTermsHelp": "Dodaj terminy techniczne, nazwy własne lub słownictwo specyficzne dla domeny, aby poprawić dokładność rozpoznawania",
+    "termsFile": "Lub Prześlij Plik Terminów (opcjonalnie):",
+    "termsFileSelected": "Plik terminów: {{filename}}",
+    "termsFileHelp": "Prześlij plik tekstowy z jednym terminem na linię",
+    "enableDiarization": "Włącz Diaryzację Mówcy",
+    "azureOnly": "(tylko Azure)",
+    "enableNlp": "Włącz Analizę NLP (kluczowe frazy, sentyment itp.)",
+    "uploadButton": "Transkrybuj",
+    "uploadingButton": "Przesyłanie..."
+  },
+  "methods": {
+    "azure": "Azure Speech Services",
+    "whisper_local": "Whisper (Lokalny)",
+    "whisper_api": "Whisper (API OpenAI)"
+  },
+  "whisperModels": {
+    "tiny": "Tiny (najszybszy, najmniej dokładny)",
+    "base": "Base",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large (najwolniejszy, najbardziej dokładny)"
+  },
+  "jobs": {
+    "title": "Zadania Transkrypcji",
+    "noJobs": "Jeszcze brak zadań transkrypcji",
+    "method": "Metoda:",
+    "id": "ID:",
+    "progress": "Postęp:",
+    "error": "Błąd:",
+    "deleteButton": "Usuń"
+  },
+  "status": {
+    "pending": "oczekujące",
+    "processing": "przetwarzanie",
+    "completed": "zakończone",
+    "failed": "nieudane"
+  },
+  "results": {
+    "title": "Wynik Transkrypcji:",
+    "metadata": {
+      "duration": "Czas trwania:",
+      "language": "Język:",
+      "speakers": "Mówcy:",
+      "customTerms": "Zastosowane Terminy Niestandardowe:",
+      "multiLanguage": "Wielojęzyczny:"
+    },
+    "segments": {
+      "title": "Segmenty ({{count}}):",
+      "more": "... i {{count}} więcej segmentów"
+    },
+    "nlp": {
+      "title": "Analiza NLP:",
+      "keyPhrases": "Kluczowe Frazy:",
+      "sentiment": "Sentyment:"
+    }
+  },
+  "errors": {
+    "noFile": "Proszę wybrać plik audio",
+    "uploadFailed": "Nie udało się wysłać zadania transkrypcji"
+  },
+  "languageSelector": {
+    "label": "Język:",
+    "tooltip": "Wybierz preferowany język"
+  }
+}

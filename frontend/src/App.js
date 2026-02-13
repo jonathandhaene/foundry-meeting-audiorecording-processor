@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import './App.css';
+import LanguageSelector from './LanguageSelector';
 
 function App() {
+  const { t } = useTranslation();
   const [file, setFile] = useState(null);
   const [method, setMethod] = useState('azure');
   const [language, setLanguage] = useState('');
@@ -57,7 +60,7 @@ function App() {
     e.preventDefault();
     
     if (!file) {
-      setError('Please select an audio file');
+      setError(t('errors.noFile'));
       return;
     }
 
@@ -100,7 +103,7 @@ function App() {
         document.getElementById('termsFileInput').value = '';
       }
     } catch (error) {
-      setError(error.response?.data?.detail || 'Failed to submit transcription job');
+      setError(error.response?.data?.detail || t('errors.uploadFailed'));
     } finally {
       setLoading(false);
     }
@@ -118,16 +121,21 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Meeting Audio Transcription</h1>
-        <p>Upload audio files and transcribe using Azure Speech or Whisper</p>
+        <div className="header-content">
+          <div className="header-text">
+            <h1>{t('app.title')}</h1>
+            <p>{t('app.subtitle')}</p>
+          </div>
+          <LanguageSelector />
+        </div>
       </header>
 
       <div className="container">
         <div className="upload-section">
-          <h2>Upload & Configure</h2>
+          <h2>{t('upload.title')}</h2>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="fileInput">Audio File:</label>
+              <label htmlFor="fileInput">{t('upload.audioFile')}</label>
               <input
                 id="fileInput"
                 type="file"
@@ -135,85 +143,85 @@ function App() {
                 onChange={handleFileChange}
                 className="file-input"
               />
-              {file && <p className="file-info">Selected: {file.name}</p>}
+              {file && <p className="file-info">{t('upload.fileSelected', { filename: file.name })}</p>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="method">Transcription Method:</label>
+              <label htmlFor="method">{t('upload.method')}</label>
               <select
                 id="method"
                 value={method}
                 onChange={(e) => setMethod(e.target.value)}
                 className="select-input"
               >
-                <option value="azure">Azure Speech Services</option>
-                <option value="whisper_local">Whisper (Local)</option>
-                <option value="whisper_api">Whisper (OpenAI API)</option>
+                <option value="azure">{t('methods.azure')}</option>
+                <option value="whisper_local">{t('methods.whisper_local')}</option>
+                <option value="whisper_api">{t('methods.whisper_api')}</option>
               </select>
             </div>
 
             {method === 'whisper_local' && (
               <div className="form-group">
-                <label htmlFor="whisperModel">Whisper Model:</label>
+                <label htmlFor="whisperModel">{t('upload.whisperModel')}</label>
                 <select
                   id="whisperModel"
                   value={whisperModel}
                   onChange={(e) => setWhisperModel(e.target.value)}
                   className="select-input"
                 >
-                  <option value="tiny">Tiny (fastest, least accurate)</option>
-                  <option value="base">Base</option>
-                  <option value="small">Small</option>
-                  <option value="medium">Medium</option>
-                  <option value="large">Large (slowest, most accurate)</option>
+                  <option value="tiny">{t('whisperModels.tiny')}</option>
+                  <option value="base">{t('whisperModels.base')}</option>
+                  <option value="small">{t('whisperModels.small')}</option>
+                  <option value="medium">{t('whisperModels.medium')}</option>
+                  <option value="large">{t('whisperModels.large')}</option>
                 </select>
               </div>
             )}
 
             <div className="form-group">
-              <label htmlFor="language">Language (optional):</label>
+              <label htmlFor="language">{t('upload.language')}</label>
               <input
                 id="language"
                 type="text"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                placeholder="e.g., en-US, es-ES (leave empty for auto-detect)"
+                placeholder={t('upload.languagePlaceholder')}
                 className="text-input"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="languageCandidates">Multi-language Support (optional):</label>
+              <label htmlFor="languageCandidates">{t('upload.languageCandidates')}</label>
               <input
                 id="languageCandidates"
                 type="text"
                 value={languageCandidates}
                 onChange={(e) => setLanguageCandidates(e.target.value)}
-                placeholder="e.g., en-US,nl-NL for Dutch with English"
+                placeholder={t('upload.languageCandidatesPlaceholder')}
                 className="text-input"
               />
               <small className="help-text">
-                Enter comma-separated language codes for mixed-language transcription (Azure only)
+                {t('upload.languageCandidatesHelp')}
               </small>
             </div>
 
             <div className="form-group">
-              <label htmlFor="customTerms">Custom Terms (optional):</label>
+              <label htmlFor="customTerms">{t('upload.customTerms')}</label>
               <textarea
                 id="customTerms"
                 value={customTerms}
                 onChange={(e) => setCustomTerms(e.target.value)}
-                placeholder="Enter custom terms separated by commas or new lines&#10;e.g., Kubernetes, Azure DevOps, MLOps"
+                placeholder={t('upload.customTermsPlaceholder')}
                 className="text-input"
                 rows="4"
               />
               <small className="help-text">
-                Add technical terms, proper nouns, or domain-specific vocabulary to improve recognition accuracy
+                {t('upload.customTermsHelp')}
               </small>
             </div>
 
             <div className="form-group">
-              <label htmlFor="termsFileInput">Or Upload Terms File (optional):</label>
+              <label htmlFor="termsFileInput">{t('upload.termsFile')}</label>
               <input
                 id="termsFileInput"
                 type="file"
@@ -221,9 +229,9 @@ function App() {
                 onChange={handleTermsFileChange}
                 className="file-input"
               />
-              {termsFile && <p className="file-info">Terms file: {termsFile.name}</p>}
+              {termsFile && <p className="file-info">{t('upload.termsFileSelected', { filename: termsFile.name })}</p>}
               <small className="help-text">
-                Upload a text file with one term per line
+                {t('upload.termsFileHelp')}
               </small>
             </div>
 
@@ -234,7 +242,7 @@ function App() {
                   checked={enableDiarization}
                   onChange={(e) => setEnableDiarization(e.target.checked)}
                 />
-                Enable Speaker Diarization {method !== 'azure' && '(Azure only)'}
+                {t('upload.enableDiarization')} {method !== 'azure' && t('upload.azureOnly')}
               </label>
             </div>
 
@@ -245,22 +253,22 @@ function App() {
                   checked={enableNlp}
                   onChange={(e) => setEnableNlp(e.target.checked)}
                 />
-                Enable NLP Analysis (key phrases, sentiment, etc.)
+                {t('upload.enableNlp')}
               </label>
             </div>
 
             {error && <div className="error">{error}</div>}
 
             <button type="submit" disabled={loading || !file} className="submit-button">
-              {loading ? 'Uploading...' : 'Transcribe'}
+              {loading ? t('upload.uploadingButton') : t('upload.uploadButton')}
             </button>
           </form>
         </div>
 
         <div className="jobs-section">
-          <h2>Transcription Jobs</h2>
+          <h2>{t('jobs.title')}</h2>
           {jobs.length === 0 ? (
-            <p className="no-jobs">No transcription jobs yet</p>
+            <p className="no-jobs">{t('jobs.noJobs')}</p>
           ) : (
             <div className="jobs-list">
               {jobs.map((job) => (
@@ -268,43 +276,43 @@ function App() {
                   <div className="job-header">
                     <h3>{job.filename}</h3>
                     <span className={`status-badge ${job.status}`}>
-                      {job.status}
+                      {t(`status.${job.status}`)}
                     </span>
                   </div>
                   <div className="job-info">
-                    <p><strong>Method:</strong> {job.method}</p>
-                    <p><strong>ID:</strong> {job.job_id}</p>
-                    {job.progress && <p><strong>Progress:</strong> {job.progress}</p>}
-                    {job.error && <p className="error"><strong>Error:</strong> {job.error}</p>}
+                    <p><strong>{t('jobs.method')}</strong> {job.method}</p>
+                    <p><strong>{t('jobs.id')}</strong> {job.job_id}</p>
+                    {job.progress && <p><strong>{t('jobs.progress')}</strong> {job.progress}</p>}
+                    {job.error && <p className="error"><strong>{t('jobs.error')}</strong> {job.error}</p>}
                   </div>
                   
                   {job.status === 'completed' && job.result && (
                     <div className="results">
-                      <h4>Transcription Result:</h4>
+                      <h4>{t('results.title')}</h4>
                       <div className="transcription-text">
                         {job.result.transcription.full_text}
                       </div>
                       
                       {job.result.transcription.metadata && (
                         <div className="metadata">
-                          <p><strong>Duration:</strong> {job.result.transcription.duration.toFixed(2)}s</p>
-                          <p><strong>Language:</strong> {job.result.transcription.language}</p>
+                          <p><strong>{t('results.metadata.duration')}</strong> {job.result.transcription.duration.toFixed(2)}s</p>
+                          <p><strong>{t('results.metadata.language')}</strong> {job.result.transcription.language}</p>
                           {job.result.transcription.metadata.speaker_count && (
-                            <p><strong>Speakers:</strong> {job.result.transcription.metadata.speaker_count}</p>
+                            <p><strong>{t('results.metadata.speakers')}</strong> {job.result.transcription.metadata.speaker_count}</p>
                           )}
                           {job.result.transcription.metadata.custom_terms_count > 0 && (
-                            <p><strong>Custom Terms Applied:</strong> {job.result.transcription.metadata.custom_terms_count}</p>
+                            <p><strong>{t('results.metadata.customTerms')}</strong> {job.result.transcription.metadata.custom_terms_count}</p>
                           )}
                           {job.result.transcription.metadata.language_candidates && 
                            job.result.transcription.metadata.language_candidates.length > 0 && (
-                            <p><strong>Multi-language:</strong> {job.result.transcription.metadata.language_candidates.join(', ')}</p>
+                            <p><strong>{t('results.metadata.multiLanguage')}</strong> {job.result.transcription.metadata.language_candidates.join(', ')}</p>
                           )}
                         </div>
                       )}
 
                       {job.result.transcription.segments && (
                         <div className="segments">
-                          <h4>Segments ({job.result.transcription.segments.length}):</h4>
+                          <h4>{t('results.segments.title', { count: job.result.transcription.segments.length })}</h4>
                           <div className="segments-list">
                             {job.result.transcription.segments.slice(0, 5).map((segment, idx) => (
                               <div key={idx} className="segment">
@@ -318,7 +326,7 @@ function App() {
                               </div>
                             ))}
                             {job.result.transcription.segments.length > 5 && (
-                              <p className="more">... and {job.result.transcription.segments.length - 5} more segments</p>
+                              <p className="more">{t('results.segments.more', { count: job.result.transcription.segments.length - 5 })}</p>
                             )}
                           </div>
                         </div>
@@ -326,10 +334,10 @@ function App() {
 
                       {job.result.nlp_analysis && (
                         <div className="nlp-results">
-                          <h4>NLP Analysis:</h4>
+                          <h4>{t('results.nlp.title')}</h4>
                           {job.result.nlp_analysis.key_phrases && (
                             <div className="key-phrases">
-                              <strong>Key Phrases:</strong>
+                              <strong>{t('results.nlp.keyPhrases')}</strong>
                               <div className="tags">
                                 {job.result.nlp_analysis.key_phrases.slice(0, 10).map((phrase, idx) => (
                                   <span key={idx} className="tag">{phrase.text}</span>
@@ -339,7 +347,7 @@ function App() {
                           )}
                           {job.result.nlp_analysis.sentiment && (
                             <div className="sentiment">
-                              <strong>Sentiment:</strong> {job.result.nlp_analysis.sentiment.overall}
+                              <strong>{t('results.nlp.sentiment')}</strong> {job.result.nlp_analysis.sentiment.overall}
                             </div>
                           )}
                         </div>
@@ -348,7 +356,7 @@ function App() {
                   )}
                   
                   <button onClick={() => deleteJob(job.job_id)} className="delete-button">
-                    Delete
+                    {t('jobs.deleteButton')}
                   </button>
                 </div>
               ))}

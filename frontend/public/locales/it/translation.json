@@ -1,0 +1,83 @@
+{
+  "app": {
+    "title": "Trascrizione Audio di Riunioni",
+    "subtitle": "Carica file audio e trascrivi usando Azure Speech o Whisper"
+  },
+  "upload": {
+    "title": "Carica e Configura",
+    "audioFile": "File Audio:",
+    "fileSelected": "Selezionato: {{filename}}",
+    "method": "Metodo di Trascrizione:",
+    "whisperModel": "Modello Whisper:",
+    "language": "Lingua (opzionale):",
+    "languagePlaceholder": "es., en-US, es-ES (lasciare vuoto per rilevamento automatico)",
+    "languageCandidates": "Supporto Multilingua (opzionale):",
+    "languageCandidatesPlaceholder": "es., en-US,nl-NL per olandese con inglese",
+    "languageCandidatesHelp": "Inserisci codici lingua separati da virgole per trascrizione multilingua (solo Azure)",
+    "customTerms": "Termini Personalizzati (opzionale):",
+    "customTermsPlaceholder": "Inserisci termini personalizzati separati da virgole o nuove righe\nes., Kubernetes, Azure DevOps, MLOps",
+    "customTermsHelp": "Aggiungi termini tecnici, nomi propri o vocabolario specifico del dominio per migliorare la precisione del riconoscimento",
+    "termsFile": "O Carica File di Termini (opzionale):",
+    "termsFileSelected": "File di termini: {{filename}}",
+    "termsFileHelp": "Carica un file di testo con un termine per riga",
+    "enableDiarization": "Abilita Diarizzazione del Parlante",
+    "azureOnly": "(solo Azure)",
+    "enableNlp": "Abilita Analisi NLP (frasi chiave, sentiment, ecc.)",
+    "uploadButton": "Trascrivi",
+    "uploadingButton": "Caricamento..."
+  },
+  "methods": {
+    "azure": "Azure Speech Services",
+    "whisper_local": "Whisper (Locale)",
+    "whisper_api": "Whisper (API OpenAI)"
+  },
+  "whisperModels": {
+    "tiny": "Tiny (più veloce, meno preciso)",
+    "base": "Base",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large (più lento, più preciso)"
+  },
+  "jobs": {
+    "title": "Lavori di Trascrizione",
+    "noJobs": "Nessun lavoro di trascrizione ancora",
+    "method": "Metodo:",
+    "id": "ID:",
+    "progress": "Progresso:",
+    "error": "Errore:",
+    "deleteButton": "Elimina"
+  },
+  "status": {
+    "pending": "in attesa",
+    "processing": "in elaborazione",
+    "completed": "completato",
+    "failed": "fallito"
+  },
+  "results": {
+    "title": "Risultato di Trascrizione:",
+    "metadata": {
+      "duration": "Durata:",
+      "language": "Lingua:",
+      "speakers": "Parlanti:",
+      "customTerms": "Termini Personalizzati Applicati:",
+      "multiLanguage": "Multilingua:"
+    },
+    "segments": {
+      "title": "Segmenti ({{count}}):",
+      "more": "... e altri {{count}} segmenti"
+    },
+    "nlp": {
+      "title": "Analisi NLP:",
+      "keyPhrases": "Frasi Chiave:",
+      "sentiment": "Sentiment:"
+    }
+  },
+  "errors": {
+    "noFile": "Si prega di selezionare un file audio",
+    "uploadFailed": "Impossibile inviare il lavoro di trascrizione"
+  },
+  "languageSelector": {
+    "label": "Lingua:",
+    "tooltip": "Seleziona la tua lingua preferita"
+  }
+}
