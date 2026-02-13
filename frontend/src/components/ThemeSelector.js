@@ -28,7 +28,7 @@ function ThemeSelector() {
     setShowSelector(false);
   };
 
-  const currentTheme = themes.find(t => t.id === theme);
+  const currentTheme = themes.find(themeOption => themeOption.id === theme);
 
   return (
     <div className="theme-selector-wrapper">

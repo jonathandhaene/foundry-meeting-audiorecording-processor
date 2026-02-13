@@ -17,7 +17,7 @@ const funFacts = [
   { key: 'fact12', default: '🌟 Whisper AI can transcribe and translate simultaneously!' },
   { key: 'fact13', default: '📊 Voice recognition technology dates back to the 1950s!' },
   { key: 'fact14', default: '🎯 Custom vocabulary improves transcription accuracy by up to 15%!' },
-  { key: 'fact15', default: '🌈 Some languages have sounds that don\'t exist in others!' }
+  { key: 'fact15', default: '🌈 Some languages have sounds that do not exist in others!' }
 ];
 
 function DidYouKnow() {
