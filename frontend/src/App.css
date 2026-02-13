@@ -255,6 +255,13 @@ textarea.text-input {
   border-top: 2px solid #eee;
 }
 
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
 .results h4 {
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;

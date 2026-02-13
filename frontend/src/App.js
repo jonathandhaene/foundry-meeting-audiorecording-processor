@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import LanguageSelector from './LanguageSelector';
+import ProgressBar from './components/ProgressBar';
+import TranscriptSearch from './components/TranscriptSearch';
+import AudioPlayer from './components/AudioPlayer';
+import ExportButton from './components/ExportButton';
 
 function App() {
   const { t } = useTranslation();
@@ -18,6 +24,7 @@ function App() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [expandedJobs, setExpandedJobs] = useState(new Set());
 
   const updateJobs = useCallback(async () => {
     const updatedJobs = await Promise.all(
@@ -25,7 +32,22 @@ function App() {
         if (job.status === 'pending' || job.status === 'processing') {
           try {
             const response = await axios.get(`/api/jobs/${job.job_id}`);
-            return response.data;
+            const updatedJob = response.data;
+            
+            // Notify user when job completes
+            if (updatedJob.status === 'completed' && job.status !== 'completed') {
+              toast.success(t('notifications.jobCompleted', { 
+                defaultValue: `Transcription completed: ${job.filename}`,
+                filename: job.filename 
+              }));
+            } else if (updatedJob.status === 'failed' && job.status !== 'failed') {
+              toast.error(t('notifications.jobFailed', { 
+                defaultValue: `Transcription failed: ${job.filename}`,
+                filename: job.filename 
+              }));
+            }
+            
+            return updatedJob;
           } catch (error) {
             console.error('Error fetching job status:', error);
             return job;
@@ -35,7 +57,7 @@ function App() {
       })
     );
     setJobs(updatedJobs);
-  }, [jobs]);
+  }, [jobs, t]);
 
   // Poll for job updates
   useEffect(() => {
@@ -102,8 +124,15 @@ function App() {
       if (document.getElementById('termsFileInput')) {
         document.getElementById('termsFileInput').value = '';
       }
+      
+      // Show success notification
+      toast.info(t('notifications.jobStarted', { 
+        defaultValue: 'Transcription started',
+      }));
     } catch (error) {
-      setError(error.response?.data?.detail || t('errors.uploadFailed'));
+      const errorMsg = error.response?.data?.detail || t('errors.uploadFailed');
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -113,13 +142,36 @@ function App() {
     try {
       await axios.delete(`/api/jobs/${jobId}`);
       setJobs(jobs.filter(job => job.job_id !== jobId));
+      toast.success(t('notifications.jobDeleted', { defaultValue: 'Job deleted successfully' }));
     } catch (error) {
       console.error('Error deleting job:', error);
+      toast.error(t('notifications.jobDeleteFailed', { defaultValue: 'Failed to delete job' }));
     }
+  };
+
+  const toggleJobExpansion = (jobId) => {
+    const newExpanded = new Set(expandedJobs);
+    if (newExpanded.has(jobId)) {
+      newExpanded.delete(jobId);
+    } else {
+      newExpanded.add(jobId);
+    }
+    setExpandedJobs(newExpanded);
   };
 
   return (
     <div className="App">
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <header className="App-header">
         <div className="header-content">
           <div className="header-text">
@@ -282,13 +334,39 @@ function App() {
                   <div className="job-info">
                     <p><strong>{t('jobs.method')}</strong> {job.method}</p>
                     <p><strong>{t('jobs.id')}</strong> {job.job_id}</p>
-                    {job.progress && <p><strong>{t('jobs.progress')}</strong> {job.progress}</p>}
                     {job.error && <p className="error"><strong>{t('jobs.error')}</strong> {job.error}</p>}
                   </div>
                   
+                  {/* Show progress bar for pending/processing jobs */}
+                  {(job.status === 'pending' || job.status === 'processing') && (
+                    <ProgressBar progress={job.progress} status={job.status} />
+                  )}
+                  
                   {job.status === 'completed' && job.result && (
                     <div className="results">
-                      <h4>{t('results.title')}</h4>
+                      {/* Export button */}
+                      <div className="results-header">
+                        <h4>{t('results.title')}</h4>
+                        <ExportButton 
+                          jobId={job.job_id}
+                          transcription={job.result.transcription}
+                          nlpAnalysis={job.result.nlp_analysis}
+                          filename={job.filename}
+                        />
+                      </div>
+                      
+                      {/* Audio Player */}
+                      <AudioPlayer 
+                        jobId={job.job_id}
+                        segments={job.result.transcription.segments}
+                      />
+                      
+                      {/* Transcript Search */}
+                      <TranscriptSearch 
+                        transcript={job.result.transcription.full_text}
+                        segments={job.result.transcription.segments}
+                      />
+                      
                       <div className="transcription-text">
                         {job.result.transcription.full_text}
                       </div>
