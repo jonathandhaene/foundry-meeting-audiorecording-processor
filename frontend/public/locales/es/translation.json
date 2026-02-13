@@ -1,0 +1,83 @@
+{
+  "app": {
+    "title": "Transcripción de Audio de Reuniones",
+    "subtitle": "Cargue archivos de audio y transcriba usando Azure Speech o Whisper"
+  },
+  "upload": {
+    "title": "Cargar y Configurar",
+    "audioFile": "Archivo de Audio:",
+    "fileSelected": "Seleccionado: {{filename}}",
+    "method": "Método de Transcripción:",
+    "whisperModel": "Modelo Whisper:",
+    "language": "Idioma (opcional):",
+    "languagePlaceholder": "ej., en-US, es-ES (dejar vacío para detección automática)",
+    "languageCandidates": "Soporte Multilingüe (opcional):",
+    "languageCandidatesPlaceholder": "ej., en-US,nl-NL para holandés con inglés",
+    "languageCandidatesHelp": "Ingrese códigos de idioma separados por comas para transcripción multilingüe (solo Azure)",
+    "customTerms": "Términos Personalizados (opcional):",
+    "customTermsPlaceholder": "Ingrese términos personalizados separados por comas o nuevas líneas\nej., Kubernetes, Azure DevOps, MLOps",
+    "customTermsHelp": "Agregue términos técnicos, nombres propios o vocabulario específico del dominio para mejorar la precisión del reconocimiento",
+    "termsFile": "O Cargar Archivo de Términos (opcional):",
+    "termsFileSelected": "Archivo de términos: {{filename}}",
+    "termsFileHelp": "Cargue un archivo de texto con un término por línea",
+    "enableDiarization": "Habilitar Diarización de Hablantes",
+    "azureOnly": "(solo Azure)",
+    "enableNlp": "Habilitar Análisis NLP (frases clave, sentimiento, etc.)",
+    "uploadButton": "Transcribir",
+    "uploadingButton": "Cargando..."
+  },
+  "methods": {
+    "azure": "Azure Speech Services",
+    "whisper_local": "Whisper (Local)",
+    "whisper_api": "Whisper (API de OpenAI)"
+  },
+  "whisperModels": {
+    "tiny": "Tiny (más rápido, menos preciso)",
+    "base": "Base",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large (más lento, más preciso)"
+  },
+  "jobs": {
+    "title": "Trabajos de Transcripción",
+    "noJobs": "No hay trabajos de transcripción todavía",
+    "method": "Método:",
+    "id": "ID:",
+    "progress": "Progreso:",
+    "error": "Error:",
+    "deleteButton": "Eliminar"
+  },
+  "status": {
+    "pending": "pendiente",
+    "processing": "procesando",
+    "completed": "completado",
+    "failed": "fallido"
+  },
+  "results": {
+    "title": "Resultado de Transcripción:",
+    "metadata": {
+      "duration": "Duración:",
+      "language": "Idioma:",
+      "speakers": "Hablantes:",
+      "customTerms": "Términos Personalizados Aplicados:",
+      "multiLanguage": "Multilingüe:"
+    },
+    "segments": {
+      "title": "Segmentos ({{count}}):",
+      "more": "... y {{count}} segmentos más"
+    },
+    "nlp": {
+      "title": "Análisis NLP:",
+      "keyPhrases": "Frases Clave:",
+      "sentiment": "Sentimiento:"
+    }
+  },
+  "errors": {
+    "noFile": "Por favor seleccione un archivo de audio",
+    "uploadFailed": "Error al enviar el trabajo de transcripción"
+  },
+  "languageSelector": {
+    "label": "Idioma:",
+    "tooltip": "Seleccione su idioma preferido"
+  }
+}

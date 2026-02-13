@@ -1,0 +1,83 @@
+{
+  "app": {
+    "title": "Transcription Audio de Réunion",
+    "subtitle": "Téléchargez des fichiers audio et transcrivez avec Azure Speech ou Whisper"
+  },
+  "upload": {
+    "title": "Télécharger et Configurer",
+    "audioFile": "Fichier Audio:",
+    "fileSelected": "Sélectionné: {{filename}}",
+    "method": "Méthode de Transcription:",
+    "whisperModel": "Modèle Whisper:",
+    "language": "Langue (optionnel):",
+    "languagePlaceholder": "par ex., en-US, es-ES (laissez vide pour détection automatique)",
+    "languageCandidates": "Support Multi-langue (optionnel):",
+    "languageCandidatesPlaceholder": "par ex., en-US,nl-NL pour néerlandais avec anglais",
+    "languageCandidatesHelp": "Entrez les codes de langue séparés par des virgules pour la transcription multilingue (Azure uniquement)",
+    "customTerms": "Termes Personnalisés (optionnel):",
+    "customTermsPlaceholder": "Entrez les termes personnalisés séparés par des virgules ou des nouvelles lignes\npar ex., Kubernetes, Azure DevOps, MLOps",
+    "customTermsHelp": "Ajoutez des termes techniques, des noms propres ou un vocabulaire spécifique au domaine pour améliorer la précision de reconnaissance",
+    "termsFile": "Ou Télécharger un Fichier de Termes (optionnel):",
+    "termsFileSelected": "Fichier de termes: {{filename}}",
+    "termsFileHelp": "Téléchargez un fichier texte avec un terme par ligne",
+    "enableDiarization": "Activer la Diarisation du Locuteur",
+    "azureOnly": "(Azure uniquement)",
+    "enableNlp": "Activer l'Analyse NLP (phrases clés, sentiment, etc.)",
+    "uploadButton": "Transcrire",
+    "uploadingButton": "Téléchargement..."
+  },
+  "methods": {
+    "azure": "Azure Speech Services",
+    "whisper_local": "Whisper (Local)",
+    "whisper_api": "Whisper (API OpenAI)"
+  },
+  "whisperModels": {
+    "tiny": "Tiny (le plus rapide, moins précis)",
+    "base": "Base",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large (le plus lent, plus précis)"
+  },
+  "jobs": {
+    "title": "Tâches de Transcription",
+    "noJobs": "Aucune tâche de transcription pour le moment",
+    "method": "Méthode:",
+    "id": "ID:",
+    "progress": "Progrès:",
+    "error": "Erreur:",
+    "deleteButton": "Supprimer"
+  },
+  "status": {
+    "pending": "en attente",
+    "processing": "en cours",
+    "completed": "terminé",
+    "failed": "échoué"
+  },
+  "results": {
+    "title": "Résultat de Transcription:",
+    "metadata": {
+      "duration": "Durée:",
+      "language": "Langue:",
+      "speakers": "Locuteurs:",
+      "customTerms": "Termes Personnalisés Appliqués:",
+      "multiLanguage": "Multi-langue:"
+    },
+    "segments": {
+      "title": "Segments ({{count}}):",
+      "more": "... et {{count}} segments de plus"
+    },
+    "nlp": {
+      "title": "Analyse NLP:",
+      "keyPhrases": "Phrases Clés:",
+      "sentiment": "Sentiment:"
+    }
+  },
+  "errors": {
+    "noFile": "Veuillez sélectionner un fichier audio",
+    "uploadFailed": "Échec de la soumission de la tâche de transcription"
+  },
+  "languageSelector": {
+    "label": "Langue:",
+    "tooltip": "Sélectionnez votre langue préférée"
+  }
+}

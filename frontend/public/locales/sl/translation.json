@@ -1,0 +1,83 @@
+{
+  "app": {
+    "title": "Meeting Audio Transcription",
+    "subtitle": "Upload audio files and transcribe using Azure Speech or Whisper"
+  },
+  "upload": {
+    "title": "Upload & Configure",
+    "audioFile": "Audio File:",
+    "fileSelected": "Selected: {{filename}}",
+    "method": "Transcription Method:",
+    "whisperModel": "Whisper Model:",
+    "language": "Language (optional):",
+    "languagePlaceholder": "e.g., en-US, es-ES (leave empty for auto-detect)",
+    "languageCandidates": "Multi-language Support (optional):",
+    "languageCandidatesPlaceholder": "e.g., en-US,nl-NL for Dutch with English",
+    "languageCandidatesHelp": "Enter comma-separated language codes for mixed-language transcription (Azure only)",
+    "customTerms": "Custom Terms (optional):",
+    "customTermsPlaceholder": "Enter custom terms separated by commas or new lines\ne.g., Kubernetes, Azure DevOps, MLOps",
+    "customTermsHelp": "Add technical terms, proper nouns, or domain-specific vocabulary to improve recognition accuracy",
+    "termsFile": "Or Upload Terms File (optional):",
+    "termsFileSelected": "Terms file: {{filename}}",
+    "termsFileHelp": "Upload a text file with one term per line",
+    "enableDiarization": "Enable Speaker Diarization",
+    "azureOnly": "(Azure only)",
+    "enableNlp": "Enable NLP Analysis (key phrases, sentiment, etc.)",
+    "uploadButton": "Transcribe",
+    "uploadingButton": "Uploading..."
+  },
+  "methods": {
+    "azure": "Azure Speech Services",
+    "whisper_local": "Whisper (Local)",
+    "whisper_api": "Whisper (OpenAI API)"
+  },
+  "whisperModels": {
+    "tiny": "Tiny (fastest, least accurate)",
+    "base": "Base",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large (slowest, most accurate)"
+  },
+  "jobs": {
+    "title": "Transcription Jobs",
+    "noJobs": "No transcription jobs yet",
+    "method": "Method:",
+    "id": "ID:",
+    "progress": "Progress:",
+    "error": "Error:",
+    "deleteButton": "Delete"
+  },
+  "status": {
+    "pending": "pending",
+    "processing": "processing",
+    "completed": "completed",
+    "failed": "failed"
+  },
+  "results": {
+    "title": "Transcription Result:",
+    "metadata": {
+      "duration": "Duration:",
+      "language": "Language:",
+      "speakers": "Speakers:",
+      "customTerms": "Custom Terms Applied:",
+      "multiLanguage": "Multi-language:"
+    },
+    "segments": {
+      "title": "Segments ({{count}}):",
+      "more": "... and {{count}} more segments"
+    },
+    "nlp": {
+      "title": "NLP Analysis:",
+      "keyPhrases": "Key Phrases:",
+      "sentiment": "Sentiment:"
+    }
+  },
+  "errors": {
+    "noFile": "Please select an audio file",
+    "uploadFailed": "Failed to submit transcription job"
+  },
+  "languageSelector": {
+    "label": "Language:",
+    "tooltip": "Select your preferred language"
+  }
+}

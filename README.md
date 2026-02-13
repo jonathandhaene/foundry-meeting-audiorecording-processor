@@ -28,6 +28,7 @@ A comprehensive end-to-end solution for processing meeting audio files with mult
 
 ### 🖥️ User Interface
 - **Web UI**: Interactive React-based interface for easy file upload and transcription
+- **Multi-language Support**: Full UI localization in all 24 official EU languages
 - **REST API**: FastAPI backend for programmatic access
 - **Real-time Progress**: Track transcription status and view results instantly
 - **Job Management**: View, compare, and manage multiple transcription jobs
@@ -187,15 +188,25 @@ npm start
 The Web UI will open at `http://localhost:3000`
 
 **Using the UI:**
-1. Upload an audio file
-2. Select transcription method (Azure, Whisper Local, or Whisper API)
-3. Configure options (language, diarization, model size)
-4. **Optional**: Add custom terms for better accuracy (comma-separated or upload file)
-5. **Optional**: Enable multi-language support (for mixed-language content)
-6. Click "Transcribe"
-7. View results in real-time
+1. **Select your language** using the language selector in the top-right corner (24 EU languages supported)
+2. Upload an audio file
+3. Select transcription method (Azure, Whisper Local, or Whisper API)
+4. Configure options (language, diarization, model size)
+5. **Optional**: Add custom terms for better accuracy (comma-separated or upload file)
+6. **Optional**: Enable multi-language support (for mixed-language content)
+7. Click "Transcribe"
+8. View results in real-time
 
 For detailed UI usage instructions, see [docs/UI_USAGE.md](docs/UI_USAGE.md)
+
+**Multi-Language UI Support**
+
+The interface is fully localized in all 24 official EU languages:
+- English, French, German, Spanish, Italian, Portuguese, Polish, Dutch
+- Bulgarian, Czech, Danish, Greek, Estonian, Finnish, Irish, Croatian
+- Hungarian, Lithuanian, Latvian, Maltese, Romanian, Slovak, Slovenian, Swedish
+
+Your preferred language is automatically detected from your browser settings, and you can change it anytime using the language selector. See the [Translation Guide](docs/TRANSLATION_GUIDE.md) for information on adding or updating translations.
 
 **New Feature: Custom Terms & Multi-language Support**
 

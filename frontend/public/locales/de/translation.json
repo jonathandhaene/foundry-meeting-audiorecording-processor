@@ -1,0 +1,83 @@
+{
+  "app": {
+    "title": "Meeting-Audio-Transkription",
+    "subtitle": "Laden Sie Audiodateien hoch und transkribieren Sie mit Azure Speech oder Whisper"
+  },
+  "upload": {
+    "title": "Hochladen und Konfigurieren",
+    "audioFile": "Audiodatei:",
+    "fileSelected": "Ausgewählt: {{filename}}",
+    "method": "Transkriptionsmethode:",
+    "whisperModel": "Whisper-Modell:",
+    "language": "Sprache (optional):",
+    "languagePlaceholder": "z.B. en-US, es-ES (leer lassen für automatische Erkennung)",
+    "languageCandidates": "Mehrsprachige Unterstützung (optional):",
+    "languageCandidatesPlaceholder": "z.B. en-US,nl-NL für Niederländisch mit Englisch",
+    "languageCandidatesHelp": "Geben Sie durch Kommas getrennte Sprachcodes für mehrsprachige Transkription ein (nur Azure)",
+    "customTerms": "Benutzerdefinierte Begriffe (optional):",
+    "customTermsPlaceholder": "Geben Sie benutzerdefinierte Begriffe durch Kommas oder Zeilenumbrüche getrennt ein\nz.B. Kubernetes, Azure DevOps, MLOps",
+    "customTermsHelp": "Fügen Sie technische Begriffe, Eigennamen oder domänenspezifisches Vokabular hinzu, um die Erkennungsgenauigkeit zu verbessern",
+    "termsFile": "Oder Begriffsdatei hochladen (optional):",
+    "termsFileSelected": "Begriffsdatei: {{filename}}",
+    "termsFileHelp": "Laden Sie eine Textdatei mit einem Begriff pro Zeile hoch",
+    "enableDiarization": "Sprecheridentifizierung aktivieren",
+    "azureOnly": "(nur Azure)",
+    "enableNlp": "NLP-Analyse aktivieren (Schlüsselphrasen, Stimmung usw.)",
+    "uploadButton": "Transkribieren",
+    "uploadingButton": "Wird hochgeladen..."
+  },
+  "methods": {
+    "azure": "Azure Speech Services",
+    "whisper_local": "Whisper (Lokal)",
+    "whisper_api": "Whisper (OpenAI API)"
+  },
+  "whisperModels": {
+    "tiny": "Tiny (am schnellsten, am wenigsten genau)",
+    "base": "Base",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large (am langsamsten, am genauesten)"
+  },
+  "jobs": {
+    "title": "Transkriptionsaufträge",
+    "noJobs": "Noch keine Transkriptionsaufträge",
+    "method": "Methode:",
+    "id": "ID:",
+    "progress": "Fortschritt:",
+    "error": "Fehler:",
+    "deleteButton": "Löschen"
+  },
+  "status": {
+    "pending": "ausstehend",
+    "processing": "in Bearbeitung",
+    "completed": "abgeschlossen",
+    "failed": "fehlgeschlagen"
+  },
+  "results": {
+    "title": "Transkriptionsergebnis:",
+    "metadata": {
+      "duration": "Dauer:",
+      "language": "Sprache:",
+      "speakers": "Sprecher:",
+      "customTerms": "Angewendete benutzerdefinierte Begriffe:",
+      "multiLanguage": "Mehrsprachig:"
+    },
+    "segments": {
+      "title": "Segmente ({{count}}):",
+      "more": "... und {{count}} weitere Segmente"
+    },
+    "nlp": {
+      "title": "NLP-Analyse:",
+      "keyPhrases": "Schlüsselphrasen:",
+      "sentiment": "Stimmung:"
+    }
+  },
+  "errors": {
+    "noFile": "Bitte wählen Sie eine Audiodatei aus",
+    "uploadFailed": "Fehler beim Senden des Transkriptionsauftrags"
+  },
+  "languageSelector": {
+    "label": "Sprache:",
+    "tooltip": "Wählen Sie Ihre bevorzugte Sprache"
+  }
+}

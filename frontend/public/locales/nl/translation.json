@@ -1,0 +1,83 @@
+{
+  "app": {
+    "title": "Meeting Audio Transcriptie",
+    "subtitle": "Upload audiobestanden en transcribeer met Azure Speech of Whisper"
+  },
+  "upload": {
+    "title": "Uploaden en Configureren",
+    "audioFile": "Audiobestand:",
+    "fileSelected": "Geselecteerd: {{filename}}",
+    "method": "Transcriptiemethode:",
+    "whisperModel": "Whisper Model:",
+    "language": "Taal (optioneel):",
+    "languagePlaceholder": "bijv. en-US, es-ES (leeg laten voor automatische detectie)",
+    "languageCandidates": "Meertalige Ondersteuning (optioneel):",
+    "languageCandidatesPlaceholder": "bijv. en-US,nl-NL voor Nederlands met Engels",
+    "languageCandidatesHelp": "Voer door komma's gescheiden taalcodes in voor meertalige transcriptie (alleen Azure)",
+    "customTerms": "Aangepaste Termen (optioneel):",
+    "customTermsPlaceholder": "Voer aangepaste termen in gescheiden door komma's of nieuwe regels\nbijv. Kubernetes, Azure DevOps, MLOps",
+    "customTermsHelp": "Voeg technische termen, eigennamen of domeinspecifieke woordenschat toe om de herkenningsnauwkeurigheid te verbeteren",
+    "termsFile": "Of Upload Termenbestand (optioneel):",
+    "termsFileSelected": "Termenbestand: {{filename}}",
+    "termsFileHelp": "Upload een tekstbestand met één term per regel",
+    "enableDiarization": "Sprekerherkenning Inschakelen",
+    "azureOnly": "(alleen Azure)",
+    "enableNlp": "NLP-Analyse Inschakelen (kernzinnen, sentiment, enz.)",
+    "uploadButton": "Transcriberen",
+    "uploadingButton": "Uploaden..."
+  },
+  "methods": {
+    "azure": "Azure Speech Services",
+    "whisper_local": "Whisper (Lokaal)",
+    "whisper_api": "Whisper (OpenAI API)"
+  },
+  "whisperModels": {
+    "tiny": "Tiny (snelste, minst nauwkeurig)",
+    "base": "Base",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large (langzaamste, meest nauwkeurig)"
+  },
+  "jobs": {
+    "title": "Transcriptietaken",
+    "noJobs": "Nog geen transcriptietaken",
+    "method": "Methode:",
+    "id": "ID:",
+    "progress": "Voortgang:",
+    "error": "Fout:",
+    "deleteButton": "Verwijderen"
+  },
+  "status": {
+    "pending": "in afwachting",
+    "processing": "verwerken",
+    "completed": "voltooid",
+    "failed": "mislukt"
+  },
+  "results": {
+    "title": "Transcriptieresultaat:",
+    "metadata": {
+      "duration": "Duur:",
+      "language": "Taal:",
+      "speakers": "Sprekers:",
+      "customTerms": "Toegepaste Aangepaste Termen:",
+      "multiLanguage": "Meertalig:"
+    },
+    "segments": {
+      "title": "Segmenten ({{count}}):",
+      "more": "... en {{count}} meer segmenten"
+    },
+    "nlp": {
+      "title": "NLP-Analyse:",
+      "keyPhrases": "Kernzinnen:",
+      "sentiment": "Sentiment:"
+    }
+  },
+  "errors": {
+    "noFile": "Selecteer een audiobestand",
+    "uploadFailed": "Kan transcriptietaak niet indienen"
+  },
+  "languageSelector": {
+    "label": "Taal:",
+    "tooltip": "Selecteer uw voorkeurstaal"
+  }
+}
