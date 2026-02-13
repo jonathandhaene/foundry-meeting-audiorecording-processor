@@ -65,3 +65,7 @@ temp/
 *.m4a
 *.flac
 !tests/fixtures/*.wav
+
+# Frontend
+frontend/node_modules/
+frontend/build/
