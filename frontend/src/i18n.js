@@ -23,6 +23,9 @@ i18n
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
     },
+    
+    // Handle language codes with regions (e.g., en-US -> en)
+    load: 'languageOnly',
   });
 
 export default i18n;

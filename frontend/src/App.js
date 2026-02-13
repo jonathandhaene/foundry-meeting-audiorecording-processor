@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import './App.css';
@@ -19,17 +19,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Poll for job updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (jobs.length > 0) {
-        updateJobs();
-      }
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [jobs]);
-
-  const updateJobs = async () => {
+  const updateJobs = useCallback(async () => {
     const updatedJobs = await Promise.all(
       jobs.map(async (job) => {
         if (job.status === 'pending' || job.status === 'processing') {
@@ -45,7 +35,17 @@ function App() {
       })
     );
     setJobs(updatedJobs);
-  };
+  }, [jobs]);
+
+  // Poll for job updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (jobs.length > 0) {
+        updateJobs();
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [jobs, updateJobs]);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
