@@ -1,0 +1,6 @@
+# Development dependencies
+-r requirements.txt
+
+# Additional dev tools
+ipython==8.24.0
+jupyter==1.0.0
