@@ -11,6 +11,10 @@ import TranscriptSearch from './components/TranscriptSearch';
 import AudioPlayer from './components/AudioPlayer';
 import ExportButton from './components/ExportButton';
 import AccessibilityControls from './components/AccessibilityControls';
+import ThemeSelector from './components/ThemeSelector';
+import DidYouKnow from './components/DidYouKnow';
+import BadgeSystem from './components/BadgeSystem';
+import SpeakerAvatar from './components/SpeakerAvatar';
 
 function App() {
   const { t } = useTranslation();
@@ -156,6 +160,15 @@ function App() {
       <a href="#main-content" className="skip-to-content">
         {t('accessibility.skipToContent', { defaultValue: 'Skip to main content' })}
       </a>
+      
+      {/* Theme Selector */}
+      <ThemeSelector />
+      
+      {/* Badge System */}
+      <BadgeSystem jobs={jobs} />
+      
+      {/* Did You Know Easter Egg */}
+      <DidYouKnow />
       
       <ToastContainer
         position="top-right"
@@ -399,6 +412,9 @@ function App() {
                           <div className="segments-list">
                             {job.result.transcription.segments.slice(0, 5).map((segment, idx) => (
                               <div key={idx} className="segment">
+                                {segment.speaker_id && (
+                                  <SpeakerAvatar speakerId={segment.speaker_id} size="small" />
+                                )}
                                 <span className="timestamp">
                                   [{segment.start_time.toFixed(1)}s - {segment.end_time.toFixed(1)}s]
                                 </span>

@@ -1,0 +1,144 @@
+.did-you-know {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(150%);
+  background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+  color: white;
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  z-index: 900;
+  max-width: 500px;
+  min-width: 300px;
+  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.did-you-know.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+.did-you-know-content {
+  position: relative;
+}
+
+.did-you-know-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.did-you-know-text {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.close-button {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  background: white;
+  color: var(--text-primary);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.close-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.close-button:active {
+  transform: scale(0.95);
+}
+
+.close-button:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+/* Confetti animation for special dates */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1100;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  top: -10px;
+  opacity: 0;
+  animation: confetti-fall 3s linear forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .did-you-know {
+    bottom: 5rem;
+    left: 1rem;
+    right: 1rem;
+    transform: translateX(0) translateY(150%);
+    min-width: auto;
+    max-width: none;
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .did-you-know.show {
+    transform: translateX(0) translateY(0);
+  }
+  
+  .did-you-know-title {
+    font-size: 1.1rem;
+  }
+  
+  .did-you-know-text {
+    font-size: 0.95rem;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .did-you-know {
+    transition: none;
+  }
+  
+  .confetti {
+    animation: none;
+    display: none;
+  }
+  
+  .close-button:hover {
+    transform: none;
+  }
+}

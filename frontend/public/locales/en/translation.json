@@ -24,7 +24,8 @@
     "azureOnly": "(Azure only)",
     "enableNlp": "Enable NLP Analysis (key phrases, sentiment, etc.)",
     "uploadButton": "Transcribe",
-    "uploadingButton": "Uploading..."
+    "uploadingButton": "Uploading...",
+    "formLabel": "Transcription configuration form"
   },
   "methods": {
     "azure": "Azure Speech Services",
@@ -111,11 +112,74 @@
     "highContrast": "High Contrast Mode",
     "keyboardInfo": "Use Tab to navigate, Enter to activate buttons"
   },
-  "upload": {
-    "formLabel": "Transcription configuration form"
-  },
   "languageSelector": {
     "label": "Language:",
     "tooltip": "Select your preferred language"
+  },
+  "themes": {
+    "light": "Light",
+    "dark": "Dark",
+    "ocean": "Ocean",
+    "forest": "Forest",
+    "sunset": "Sunset",
+    "selectTheme": "Select theme",
+    "chooseTheme": "Choose a Theme",
+    "toggle": "Switch to {{mode}} mode"
+  },
+  "didYouKnow": {
+    "title": "Did You Know?",
+    "close": "Close",
+    "fact1": "🌍 There are over 7,000 languages spoken in the world today!",
+    "fact2": "🎤 The first voice recording ever made was \"Mary had a little lamb\" in 1877!",
+    "fact3": "🤖 AI transcription can now recognize speech in over 100 languages!",
+    "fact4": "🗣️ Speaker diarization helps identify who said what in a conversation!",
+    "fact5": "🎵 The human voice range is typically 85-255 Hz for males and 165-255 Hz for females!",
+    "fact6": "📝 Transcription accuracy has improved by over 30% in the last 5 years!",
+    "fact7": "🌏 Mandarin Chinese is the most spoken native language with over 900 million speakers!",
+    "fact8": "🔊 Audio processing can remove background noise while preserving speech quality!",
+    "fact9": "💬 The average person speaks at 110-150 words per minute!",
+    "fact10": "🎙️ Professional transcriptionists can type 75-100 words per minute!",
+    "fact11": "🧠 NLP can extract sentiment and key phrases from transcribed text!",
+    "fact12": "🌟 Whisper AI can transcribe and translate simultaneously!",
+    "fact13": "📊 Voice recognition technology dates back to the 1950s!",
+    "fact14": "🎯 Custom vocabulary improves transcription accuracy by up to 15%!",
+    "fact15": "🌈 Some languages have sounds that don't exist in others!"
+  },
+  "badges": {
+    "title": "Achievements",
+    "viewBadges": "View badges",
+    "earned": "Badge Earned!",
+    "first_transcription": {
+      "name": "First Steps",
+      "description": "Complete your first transcription"
+    },
+    "five_transcriptions": {
+      "name": "Getting Started",
+      "description": "Complete 5 transcriptions"
+    },
+    "ten_transcriptions": {
+      "name": "Professional",
+      "description": "Complete 10 transcriptions"
+    },
+    "one_hour": {
+      "name": "Hour Master",
+      "description": "Transcribe 1 hour of audio"
+    },
+    "five_hours": {
+      "name": "Time Keeper",
+      "description": "Transcribe 5 hours of audio"
+    },
+    "multilingual": {
+      "name": "Polyglot",
+      "description": "Transcribe in 3 different languages"
+    },
+    "nlp_user": {
+      "name": "NLP Explorer",
+      "description": "Use NLP analysis 5 times"
+    },
+    "diarization_expert": {
+      "name": "Speaker Pro",
+      "description": "Use speaker diarization 10 times"
+    }
   }
 }

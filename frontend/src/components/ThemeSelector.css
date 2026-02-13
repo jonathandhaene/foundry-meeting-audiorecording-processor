@@ -1,0 +1,156 @@
+.theme-selector-wrapper {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+}
+
+.theme-toggle-btn {
+  background: var(--theme-toggle-bg);
+  border: 2px solid var(--theme-toggle-border);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--theme-toggle-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: var(--theme-toggle-shadow-hover);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle-btn:focus {
+  outline: 2px solid var(--focus-color);
+  outline-offset: 2px;
+}
+
+.theme-selector-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 998;
+}
+
+.theme-selector-panel {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px var(--shadow);
+  z-index: 999;
+  min-width: 250px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.theme-selector-panel h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.theme-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.theme-option:hover {
+  border-color: var(--focus-color);
+  background: var(--bg-primary);
+  transform: translateX(4px);
+}
+
+.theme-option.active {
+  border-color: var(--gradient-start);
+  background: var(--bg-primary);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.theme-option:focus {
+  outline: 2px solid var(--focus-color);
+  outline-offset: 2px;
+}
+
+.theme-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.theme-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .theme-toggle-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+  }
+  
+  .theme-selector-panel {
+    right: -1rem;
+    min-width: 220px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle-btn {
+    transition: none;
+  }
+  
+  .theme-toggle-btn:hover {
+    transform: none;
+  }
+  
+  .theme-option:hover {
+    transform: none;
+  }
+  
+  .theme-selector-panel {
+    animation: none;
+  }
+}
