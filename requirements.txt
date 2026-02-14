@@ -23,7 +23,7 @@ Pillow==12.1.1
 
 # Whisper transcription
 setuptools>=78.1.1
-openai-whisper==20231117
+openai-whisper==20250625
 openai==1.10.0
 
 # Testing
