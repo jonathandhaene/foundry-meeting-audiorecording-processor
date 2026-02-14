@@ -280,16 +280,27 @@ kubectl apply -f k8s-deployment.yaml
 
 Automated deployment pipeline using GitHub Actions.
 
+### Available Workflows
+
+The repository includes two deployment workflows:
+
+1. **`.github/workflows/ci-cd.yml`** - Comprehensive CI/CD pipeline
+2. **`.github/workflows/deploy-to-azure.yml`** - Simplified Azure deployment
+
 ### Setup
 
-1. Configure GitHub Secrets:
+#### Required GitHub Secrets
 
 Go to Settings → Secrets and add:
-- `AZURE_CREDENTIALS`: Service principal credentials
-- `AZURE_FUNCTION_APP_NAME`: Your function app name
-- `AZURE_FUNCTION_PUBLISH_PROFILE`: Function app publish profile
+- `AZURE_CREDENTIALS`: Service principal credentials for Azure login
+- `AZURE_WEBAPP_NAME`: Your Azure App Service name
+- `AZURE_FUNCTION_APP_NAME`: Your function app name (for ci-cd.yml)
+- `AZURE_FUNCTION_PUBLISH_PROFILE`: Function app publish profile (for ci-cd.yml)
 
-2. Get Azure credentials:
+#### Get Azure Credentials
+
+Create a service principal with contributor role:
+
 ```bash
 az ad sp create-for-rbac \
   --name "github-actions-sp" \
@@ -298,9 +309,20 @@ az ad sp create-for-rbac \
   --sdk-auth
 ```
 
-Copy the JSON output to `AZURE_CREDENTIALS` secret.
+Copy the JSON output to `AZURE_CREDENTIALS` secret. Example format:
+```json
+{
+  "clientId": "<client-id>",
+  "clientSecret": "<client-secret>",
+  "subscriptionId": "<subscription-id>",
+  "tenantId": "<tenant-id>"
+}
+```
 
-3. Get publish profile:
+#### Get Publish Profile (Optional)
+
+For the ci-cd.yml workflow:
+
 ```bash
 az functionapp deployment list-publishing-profiles \
   --name meeting-processor-func \
@@ -310,25 +332,63 @@ az functionapp deployment list-publishing-profiles \
 
 Copy the output to `AZURE_FUNCTION_PUBLISH_PROFILE` secret.
 
-### Workflow Configuration
+### Deploy to Azure Workflow
 
-The repository includes `.github/workflows/ci-cd.yml` which automatically:
+The **deploy-to-azure.yml** workflow provides a streamlined deployment process:
+
+#### Features:
+- **Triggers**: Automatically on push/pull_request to `main` branch, or manually
+- **Build**: Installs dependencies for both Python backend and React frontend
+- **Deploy**: Publishes the application to Azure App Service
+
+#### What it does:
+
+1. **Build Job:**
+   - Sets up Python 3.11 and Node.js 18
+   - Installs FFmpeg and system dependencies
+   - Caches pip dependencies for faster builds
+   - Builds Python package and React frontend
+   - Uploads artifacts for deployment
+
+2. **Deploy Job:**
+   - Only runs on push to main branch
+   - Downloads build artifacts
+   - Logs into Azure using service principal
+   - Deploys to Azure Web App using `azure/webapps-deploy@v2`
+
+#### Usage:
+
+The workflow automatically triggers on:
+- Push to `main` branch (builds and deploys)
+- Pull request to `main` branch (builds only, no deployment)
+- Manual trigger via workflow_dispatch
+
+### CI/CD Pipeline Workflow
+
+The **ci-cd.yml** workflow provides comprehensive testing and multi-service deployment:
+
+#### What it does:
 
 1. **On Push/PR:**
-   - Runs tests on multiple Python versions
+   - Runs tests on multiple Python versions (3.9, 3.10, 3.11)
    - Performs linting and type checking
    - Generates coverage reports
+   - Builds Python package and React frontend
 
 2. **On Push to main:**
    - Deploys to Azure Functions
+   - Deploys backend API to Azure Web App
+   - Deploys frontend to Azure Static Web App
    - Updates production environment
 
 ### Manual Deployment Trigger
 
-You can manually trigger deployment:
+You can manually trigger either workflow:
 
 1. Go to Actions tab in GitHub
-2. Select "CI/CD Pipeline" workflow
+2. Select the workflow you want to run:
+   - "Deploy to Azure" - for streamlined deployment
+   - "CI/CD Pipeline" - for comprehensive testing and deployment
 3. Click "Run workflow"
 4. Select branch and run
 
