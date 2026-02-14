@@ -9,6 +9,14 @@ import logging
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
 
+# Azure SDK imports (can be mocked in tests)
+try:
+    from azure.ai.textanalytics import TextAnalyticsClient
+    from azure.core.credentials import AzureKeyCredential
+except ImportError:
+    TextAnalyticsClient = None  # type: ignore
+    AzureKeyCredential = None  # type: ignore
+
 logger = logging.getLogger(__name__)
 
 
@@ -73,20 +81,17 @@ class ContentAnalyzer:
         self.text_analytics_endpoint = text_analytics_endpoint
         self.language = language
 
-        try:
-            from azure.ai.textanalytics import TextAnalyticsClient
-            from azure.core.credentials import AzureKeyCredential
-
-            self.client = TextAnalyticsClient(
-                endpoint=text_analytics_endpoint,
-                credential=AzureKeyCredential(text_analytics_key)
-            )
-        except ImportError:
+        if TextAnalyticsClient is None or AzureKeyCredential is None:
             logger.error(
                 "Azure Text Analytics SDK not installed. "
                 "Install with: pip install azure-ai-textanalytics"
             )
-            raise
+            raise ImportError("Azure Text Analytics SDK not available")
+
+        self.client = TextAnalyticsClient(
+            endpoint=text_analytics_endpoint,
+            credential=AzureKeyCredential(text_analytics_key)
+        )
 
     def analyze_transcription(
         self,

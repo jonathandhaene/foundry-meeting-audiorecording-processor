@@ -7,10 +7,21 @@ OpenAI's Whisper for local or API-based transcription.
 
 import logging
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 
 from .transcriber import TranscriptionSegment, TranscriptionResult
+
+# Optional imports for Whisper (can be mocked in tests)
+try:
+    import whisper
+except ImportError:
+    whisper = None  # type: ignore
+
+try:
+    import openai
+except ImportError:
+    openai = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -53,22 +64,18 @@ class WhisperTranscriber:
         if use_api:
             if not api_key:
                 raise ValueError("API key required when use_api=True")
-            try:
-                import openai
-                self.openai = openai
-                self.openai.api_key = api_key
-            except ImportError:
+            if openai is None:
                 logger.error("OpenAI package not installed. Install with: pip install openai")
-                raise
+                raise ImportError("OpenAI package not available")
+            self.openai = openai
+            self.openai.api_key = api_key
         else:
-            try:
-                import whisper
-                self.whisper = whisper
-                logger.info(f"Loading Whisper model: {model_size}")
-                self.model = whisper.load_model(model_size)
-            except ImportError:
+            if whisper is None:
                 logger.error("Whisper package not installed. Install with: pip install openai-whisper")
-                raise
+                raise ImportError("Whisper package not available")
+            self.whisper = whisper
+            logger.info(f"Loading Whisper model: {model_size}")
+            self.model = whisper.load_model(model_size)
 
     def transcribe_audio(
         self,
@@ -167,7 +174,7 @@ class WhisperTranscriber:
                 "method": "whisper_local",
                 "diarization_enabled": False,
                 "custom_terms_count": len(self.custom_terms),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         )
 
@@ -222,7 +229,7 @@ class WhisperTranscriber:
                 "method": "whisper_api",
                 "diarization_enabled": False,
                 "custom_terms_count": len(self.custom_terms),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         )
 

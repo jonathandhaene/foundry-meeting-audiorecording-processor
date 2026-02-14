@@ -11,7 +11,7 @@ import uuid
 import tempfile
 from pathlib import Path
 from typing import Dict, Any, Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks, Form
@@ -137,7 +137,7 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 @app.post("/api/transcribe", response_model=JobResponse)
@@ -207,8 +207,8 @@ async def transcribe_audio(
         "enable_nlp": enable_nlp,
         "custom_terms": terms_list,
         "language_candidates": lang_candidates_list,
-        "created_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
         "result": None,
         "error": None
     }
@@ -316,7 +316,7 @@ def process_transcription(
     try:
         # Update status
         jobs_db[job_id]["status"] = JobStatus.PROCESSING
-        jobs_db[job_id]["updated_at"] = datetime.utcnow().isoformat()
+        jobs_db[job_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
         jobs_db[job_id]["progress"] = "Starting transcription..."
         
         # Load configuration
@@ -386,8 +386,9 @@ def process_transcription(
         # Update job with results
         jobs_db[job_id]["status"] = JobStatus.COMPLETED
         jobs_db[job_id]["result"] = result
+        jobs_db[job_id]["error"] = None
         jobs_db[job_id]["progress"] = "Completed"
-        jobs_db[job_id]["updated_at"] = datetime.utcnow().isoformat()
+        jobs_db[job_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
         
         logger.info(f"Job {job_id} completed successfully")
         
@@ -395,7 +396,7 @@ def process_transcription(
         logger.error(f"Job {job_id} failed: {e}", exc_info=True)
         jobs_db[job_id]["status"] = JobStatus.FAILED
         jobs_db[job_id]["error"] = str(e)
-        jobs_db[job_id]["updated_at"] = datetime.utcnow().isoformat()
+        jobs_db[job_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     finally:
         # Clean up processed file
