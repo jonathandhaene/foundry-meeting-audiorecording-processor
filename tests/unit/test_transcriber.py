@@ -13,7 +13,7 @@ from meeting_processor.transcription import (
 @pytest.fixture
 def mock_speech_sdk():
     """Mock Azure Speech SDK."""
-    with patch('azure.cognitiveservices.speech') as mock_sdk:
+    with patch('meeting_processor.transcription.transcriber.speechsdk') as mock_sdk:
         # Mock SpeechConfig
         mock_config = Mock()
         mock_sdk.SpeechConfig.return_value = mock_config
@@ -138,8 +138,8 @@ class TestAzureSpeechTranscriber:
 
     def test_initialization_without_sdk(self):
         """Test initialization fails without SDK."""
-        with patch.dict('sys.modules', {'azure.cognitiveservices.speech': None}):
-            with pytest.raises(Exception):  # Will raise ImportError or AttributeError
+        with patch('meeting_processor.transcription.transcriber.speechsdk', None):
+            with pytest.raises(ImportError, match="azure-cognitiveservices-speech package is required"):
                 AzureSpeechTranscriber("key", "region")
 
     def test_extract_confidence(self, transcriber):
