@@ -16,7 +16,7 @@ This guide covers deployment options for the Meeting Audio Recording Processor.
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.10+
 - FFmpeg installed
 - Azure credentials configured
 
@@ -370,7 +370,7 @@ The **ci-cd.yml** workflow provides comprehensive testing and multi-service depl
 #### What it does:
 
 1. **On Push/PR:**
-   - Runs tests on multiple Python versions (3.9, 3.10, 3.11)
+   - Runs tests on multiple Python versions (3.10, 3.11)
    - Performs linting and type checking
    - Generates coverage reports
    - Builds Python package and React frontend

@@ -118,7 +118,7 @@ foundry-meeting-audiorecording-processor/
 
 ## Technologies Used
 
-- **Python 3.9+**: Main programming language
+- **Python 3.10+**: Main programming language
 - **Azure Speech Services**: Speech-to-text transcription
 - **Azure Text Analytics**: NLP and content understanding
 - **FFmpeg**: Audio preprocessing
