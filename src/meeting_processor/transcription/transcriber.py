@@ -8,7 +8,7 @@ speaker diarization and multilingual content.
 import logging
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TranscriptionSegment:
     """Represents a single segment of transcribed text."""
+
     text: str
     start_time: float
     end_time: float
@@ -31,6 +32,7 @@ class TranscriptionSegment:
 @dataclass
 class TranscriptionResult:
     """Complete transcription result with metadata."""
+
     segments: List[TranscriptionSegment]
     full_text: str
     duration: float
@@ -44,14 +46,14 @@ class TranscriptionResult:
             "full_text": self.full_text,
             "duration": self.duration,
             "language": self.language,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
 class AzureSpeechTranscriber:
     """
     Handles speech transcription using Azure Speech Services.
-    
+
     Supports:
     - Speech-to-text transcription
     - Speaker diarization
@@ -67,7 +69,7 @@ class AzureSpeechTranscriber:
         enable_diarization: bool = True,
         max_speakers: int = 10,
         custom_terms: Optional[List[str]] = None,
-        language_candidates: Optional[List[str]] = None
+        language_candidates: Optional[List[str]] = None,
     ):
         """
         Initialize Azure Speech transcriber.
@@ -91,6 +93,7 @@ class AzureSpeechTranscriber:
 
         try:
             import azure.cognitiveservices.speech as speechsdk
+
             self.speechsdk = speechsdk
             self._initialize_config()
         except ImportError:
@@ -99,52 +102,49 @@ class AzureSpeechTranscriber:
 
     def _initialize_config(self) -> None:
         """Initialize Azure Speech configuration."""
-        self.speech_config = self.speechsdk.SpeechConfig(
-            subscription=self.speech_key,
-            region=self.speech_region
-        )
+        self.speech_config = self.speechsdk.SpeechConfig(subscription=self.speech_key, region=self.speech_region)
         self.speech_config.speech_recognition_language = self.language
 
         # Enable detailed output
         self.speech_config.output_format = self.speechsdk.OutputFormat.Detailed
-        
+
         # Request word-level timestamps
         self.speech_config.request_word_level_timestamps()
-    
+
     def _create_phrase_list(self, recognizer) -> None:
         """
         Create and apply phrase list grammar for custom terminology.
-        
+
         Args:
             recognizer: Speech recognizer or conversation transcriber instance
         """
         if not self.custom_terms:
             return
-        
+
         try:
             # Create phrase list grammar
             phrase_list_grammar = self.speechsdk.PhraseListGrammar.from_recognizer(recognizer)
-            
+
             # Add custom terms to phrase list
             for term in self.custom_terms:
                 if term and term.strip():
                     phrase_list_grammar.addPhrase(term.strip())
                     logger.debug(f"Added custom term to phrase list: {term.strip()}")
-            
+
             logger.info(f"Applied {len(self.custom_terms)} custom terms to phrase list")
         except Exception as e:
             logger.warning(f"Failed to create phrase list: {e}")
-    
+
     def _setup_auto_detect_source_language_config(self):
         """
         Set up automatic language detection configuration for multi-language support.
-        
+
         Returns:
             AutoDetectSourceLanguageConfig if language candidates are provided, None otherwise
         """
         if not self.language_candidates or len(self.language_candidates) < 2:
             return None
-        
+
         try:
             auto_detect_config = self.speechsdk.languageconfig.AutoDetectSourceLanguageConfig(
                 languages=self.language_candidates
@@ -155,11 +155,7 @@ class AzureSpeechTranscriber:
             logger.warning(f"Failed to setup auto-detect language config: {e}")
             return None
 
-    def transcribe_audio(
-        self,
-        audio_file_path: str,
-        languages: Optional[List[str]] = None
-    ) -> TranscriptionResult:
+    def transcribe_audio(self, audio_file_path: str, languages: Optional[List[str]] = None) -> TranscriptionResult:
         """
         Transcribe audio file using Azure Speech Services.
 
@@ -185,19 +181,16 @@ class AzureSpeechTranscriber:
         """Basic transcription without speaker diarization."""
         # Set up multi-language detection if configured
         auto_detect_config = self._setup_auto_detect_source_language_config()
-        
+
         if auto_detect_config:
             speech_recognizer = self.speechsdk.SpeechRecognizer(
                 speech_config=self.speech_config,
                 audio_config=audio_config,
-                auto_detect_source_language_config=auto_detect_config
+                auto_detect_source_language_config=auto_detect_config,
             )
         else:
-            speech_recognizer = self.speechsdk.SpeechRecognizer(
-                speech_config=self.speech_config,
-                audio_config=audio_config
-            )
-        
+            speech_recognizer = self.speechsdk.SpeechRecognizer(speech_config=self.speech_config, audio_config=audio_config)
+
         # Apply custom phrase list for improved recognition
         self._create_phrase_list(speech_recognizer)
 
@@ -212,7 +205,7 @@ class AzureSpeechTranscriber:
                     text=result.text,
                     start_time=result.offset / 10000000.0,  # Convert to seconds
                     end_time=(result.offset + result.duration) / 10000000.0,
-                    confidence=self._extract_confidence(result)
+                    confidence=self._extract_confidence(result),
                 )
                 segments.append(segment)
                 full_text_parts.append(result.text)
@@ -231,6 +224,7 @@ class AzureSpeechTranscriber:
 
         # Wait for completion
         import time
+
         while not done:
             time.sleep(0.5)
 
@@ -247,22 +241,17 @@ class AzureSpeechTranscriber:
                 "diarization_enabled": False,
                 "custom_terms_count": len(self.custom_terms),
                 "language_candidates": self.language_candidates,
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
         )
 
-    def _transcribe_with_diarization(
-        self,
-        audio_file_path: str,
-        audio_config
-    ) -> TranscriptionResult:
+    def _transcribe_with_diarization(self, audio_file_path: str, audio_config) -> TranscriptionResult:
         """Transcription with speaker diarization."""
         # Create conversation transcriber
         conversation_transcriber = self.speechsdk.transcription.ConversationTranscriber(
-            speech_config=self.speech_config,
-            audio_config=audio_config
+            speech_config=self.speech_config, audio_config=audio_config
         )
-        
+
         # Apply custom phrase list for improved recognition
         self._create_phrase_list(conversation_transcriber)
 
@@ -278,7 +267,7 @@ class AzureSpeechTranscriber:
                     start_time=result.offset / 10000000.0,
                     end_time=(result.offset + result.duration) / 10000000.0,
                     speaker_id=result.speaker_id,
-                    confidence=self._extract_confidence(result)
+                    confidence=self._extract_confidence(result),
                 )
                 segments.append(segment)
                 full_text_parts.append(result.text)
@@ -297,6 +286,7 @@ class AzureSpeechTranscriber:
 
         # Wait for completion
         import time
+
         while not done:
             time.sleep(0.5)
 
@@ -318,14 +308,15 @@ class AzureSpeechTranscriber:
                 "speakers": list(speakers),
                 "custom_terms_count": len(self.custom_terms),
                 "language_candidates": self.language_candidates,
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
         )
 
     def _extract_confidence(self, result) -> float:
         """Extract confidence score from recognition result."""
         try:
             import json
+
             details = json.loads(result.json)
             nbest = details.get("NBest", [])
             if nbest:
@@ -337,7 +328,7 @@ class AzureSpeechTranscriber:
     def transcribe_realtime(self, audio_stream):
         """
         Transcribe audio in real-time from a stream.
-        
+
         This is a placeholder for real-time transcription functionality.
         """
         raise NotImplementedError("Real-time transcription not yet implemented")

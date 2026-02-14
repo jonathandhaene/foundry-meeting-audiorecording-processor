@@ -5,7 +5,6 @@ This module handles audio file normalization, format conversion,
 and preparation for transcription services.
 """
 
-import os
 import subprocess
 import json
 from pathlib import Path
@@ -21,12 +20,7 @@ class AudioPreprocessor:
     format conversion, and noise reduction.
     """
 
-    def __init__(
-        self,
-        sample_rate: int = 16000,
-        channels: int = 1,
-        bit_rate: str = "16k"
-    ):
+    def __init__(self, sample_rate: int = 16000, channels: int = 1, bit_rate: str = "16k"):
         """
         Initialize the audio preprocessor.
 
@@ -43,23 +37,14 @@ class AudioPreprocessor:
     def _check_ffmpeg(self) -> None:
         """Check if FFmpeg is installed and available."""
         try:
-            subprocess.run(
-                ["ffmpeg", "-version"],
-                capture_output=True,
-                check=True
-            )
+            subprocess.run(["ffmpeg", "-version"], capture_output=True, check=True)
         except (subprocess.CalledProcessError, FileNotFoundError):
             logger.warning(
                 "FFmpeg not found. Audio preprocessing may not work properly. "
                 "Please install FFmpeg: https://ffmpeg.org/download.html"
             )
 
-    def normalize_audio(
-        self,
-        input_path: str,
-        output_path: Optional[str] = None,
-        apply_noise_reduction: bool = True
-    ) -> str:
+    def normalize_audio(self, input_path: str, output_path: Optional[str] = None, apply_noise_reduction: bool = True) -> str:
         """
         Normalize audio file to standard format for transcription.
 
@@ -89,31 +74,27 @@ class AudioPreprocessor:
         # Build FFmpeg command
         cmd = [
             "ffmpeg",
-            "-i", str(input_path),
-            "-ar", str(self.sample_rate),
-            "-ac", str(self.channels),
-            "-b:a", self.bit_rate,
-            "-y"  # Overwrite output file if exists
+            "-i",
+            str(input_path),
+            "-ar",
+            str(self.sample_rate),
+            "-ac",
+            str(self.channels),
+            "-b:a",
+            self.bit_rate,
+            "-y",  # Overwrite output file if exists
         ]
 
         # Add noise reduction filter if requested
         if apply_noise_reduction:
-            cmd.extend([
-                "-af",
-                "highpass=f=200,lowpass=f=3000,afftdn=nf=-25"
-            ])
+            cmd.extend(["-af", "highpass=f=200,lowpass=f=3000,afftdn=nf=-25"])
 
         cmd.append(str(output_path))
 
         logger.info(f"Normalizing audio: {input_path} -> {output_path}")
 
         try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             logger.debug(f"FFmpeg output: {result.stderr}")
         except subprocess.CalledProcessError as e:
             logger.error(f"FFmpeg error: {e.stderr}")
@@ -139,29 +120,14 @@ class AudioPreprocessor:
         if not audio_path.exists():
             raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
-        cmd = [
-            "ffprobe",
-            "-v", "quiet",
-            "-print_format", "json",
-            "-show_format",
-            "-show_streams",
-            str(audio_path)
-        ]
+        cmd = ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", str(audio_path)]
 
         try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             data = json.loads(result.stdout)
 
             # Extract audio stream info
-            audio_stream = next(
-                (s for s in data.get("streams", []) if s.get("codec_type") == "audio"),
-                {}
-            )
+            audio_stream = next((s for s in data.get("streams", []) if s.get("codec_type") == "audio"), {})
 
             return {
                 "duration": float(data.get("format", {}).get("duration", 0)),
@@ -169,7 +135,7 @@ class AudioPreprocessor:
                 "channels": int(audio_stream.get("channels", 0)),
                 "codec": audio_stream.get("codec_name", "unknown"),
                 "bit_rate": int(data.get("format", {}).get("bit_rate", 0)),
-                "size": int(data.get("format", {}).get("size", 0))
+                "size": int(data.get("format", {}).get("size", 0)),
             }
         except (subprocess.CalledProcessError, json.JSONDecodeError, ValueError) as e:
             logger.error(f"Failed to get audio info: {e}")
@@ -199,13 +165,7 @@ class AudioPreprocessor:
             logger.info(f"File is already in WAV format: {input_path}")
             return str(output_path)
 
-        cmd = [
-            "ffmpeg",
-            "-i", str(input_path),
-            "-acodec", "pcm_s16le",
-            "-y",
-            str(output_path)
-        ]
+        cmd = ["ffmpeg", "-i", str(input_path), "-acodec", "pcm_s16le", "-y", str(output_path)]
 
         logger.info(f"Converting to WAV: {input_path} -> {output_path}")
 

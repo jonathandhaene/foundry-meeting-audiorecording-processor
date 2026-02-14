@@ -11,10 +11,7 @@ from typing import Dict, Any, Optional
 import json
 
 from meeting_processor.audio import AudioPreprocessor
-from meeting_processor.transcription import (
-    AzureSpeechTranscriber,
-    TranscriptionResult
-)
+from meeting_processor.transcription import AzureSpeechTranscriber, TranscriptionResult
 from meeting_processor.nlp import ContentAnalyzer, MeetingSummary
 from meeting_processor.utils import ConfigManager, setup_logging
 
@@ -24,7 +21,7 @@ logger = logging.getLogger(__name__)
 class MeetingProcessor:
     """
     Main pipeline for processing meeting audio recordings.
-    
+
     Handles:
     1. Audio preprocessing and normalization
     2. Speech-to-text transcription with diarization
@@ -47,8 +44,7 @@ class MeetingProcessor:
 
         # Initialize components
         self.audio_preprocessor = AudioPreprocessor(
-            sample_rate=self.processing_config.sample_rate,
-            channels=self.processing_config.channels
+            sample_rate=self.processing_config.sample_rate, channels=self.processing_config.channels
         )
 
         self.transcriber = AzureSpeechTranscriber(
@@ -56,22 +52,19 @@ class MeetingProcessor:
             speech_region=self.azure_config.speech_region,
             language=self.processing_config.default_language,
             enable_diarization=self.processing_config.enable_diarization,
-            max_speakers=self.processing_config.max_speakers
+            max_speakers=self.processing_config.max_speakers,
         )
 
         self.content_analyzer = ContentAnalyzer(
             text_analytics_key=self.azure_config.text_analytics_key,
             text_analytics_endpoint=self.azure_config.text_analytics_endpoint,
-            language=self.processing_config.default_language.split("-")[0]  # Extract language code
+            language=self.processing_config.default_language.split("-")[0],  # Extract language code
         )
 
         logger.info("Meeting processor initialized successfully")
 
     def process_audio_file(
-        self,
-        audio_file_path: str,
-        output_dir: Optional[str] = None,
-        skip_preprocessing: bool = False
+        self, audio_file_path: str, output_dir: Optional[str] = None, skip_preprocessing: bool = False
     ) -> Dict[str, Any]:
         """
         Process a meeting audio file end-to-end.
@@ -96,18 +89,12 @@ class MeetingProcessor:
             output_dir = Path(output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
 
-        results = {
-            "input_file": str(audio_path),
-            "output_directory": str(output_dir)
-        }
+        results = {"input_file": str(audio_path), "output_directory": str(output_dir)}
 
         # Step 1: Audio Preprocessing
         if not skip_preprocessing:
             logger.info("Step 1/3: Preprocessing audio...")
-            preprocessed_path = self.preprocess_audio(
-                str(audio_path),
-                output_dir=str(output_dir)
-            )
+            preprocessed_path = self.preprocess_audio(str(audio_path), output_dir=str(output_dir))
             results["preprocessed_audio"] = preprocessed_path
             audio_for_transcription = preprocessed_path
         else:
@@ -147,11 +134,7 @@ class MeetingProcessor:
         logger.info(f"Processing complete! Results saved to: {results_file}")
         return results
 
-    def preprocess_audio(
-        self,
-        audio_file_path: str,
-        output_dir: Optional[str] = None
-    ) -> str:
+    def preprocess_audio(self, audio_file_path: str, output_dir: Optional[str] = None) -> str:
         """
         Preprocess audio file for transcription.
 
@@ -177,7 +160,7 @@ class MeetingProcessor:
         normalized_path = self.audio_preprocessor.normalize_audio(
             input_path=str(audio_path),
             output_path=str(output_path) if output_path else None,
-            apply_noise_reduction=self.processing_config.apply_noise_reduction
+            apply_noise_reduction=self.processing_config.apply_noise_reduction,
         )
 
         return normalized_path
@@ -206,12 +189,7 @@ class MeetingProcessor:
         """
         return self.content_analyzer.analyze_transcription(transcription_text)
 
-    def process_batch(
-        self,
-        audio_files: list[str],
-        output_dir: str,
-        skip_preprocessing: bool = False
-    ) -> list[Dict[str, Any]]:
+    def process_batch(self, audio_files: list[str], output_dir: str, skip_preprocessing: bool = False) -> list[Dict[str, Any]]:
         """
         Process multiple audio files in batch.
 
@@ -233,17 +211,12 @@ class MeetingProcessor:
             logger.info(f"Processing file {i}/{len(audio_files)}: {audio_file}")
             try:
                 result = self.process_audio_file(
-                    audio_file,
-                    output_dir=str(output_path),
-                    skip_preprocessing=skip_preprocessing
+                    audio_file, output_dir=str(output_path), skip_preprocessing=skip_preprocessing
                 )
                 results.append(result)
             except Exception as e:
                 logger.error(f"Failed to process {audio_file}: {e}")
-                results.append({
-                    "input_file": audio_file,
-                    "error": str(e)
-                })
+                results.append({"input_file": audio_file, "error": str(e)})
 
         logger.info(f"Batch processing complete. Processed {len(results)} files")
         return results
@@ -253,34 +226,12 @@ def main():
     """Main entry point for CLI usage."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Process meeting audio recordings with Azure services"
-    )
-    parser.add_argument(
-        "audio_file",
-        help="Path to audio file to process"
-    )
-    parser.add_argument(
-        "-o", "--output",
-        help="Output directory (default: same as input file)",
-        default=None
-    )
-    parser.add_argument(
-        "--skip-preprocessing",
-        action="store_true",
-        help="Skip audio preprocessing step"
-    )
-    parser.add_argument(
-        "--log-level",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
-        default="INFO",
-        help="Logging level"
-    )
-    parser.add_argument(
-        "--env-file",
-        help="Path to .env file with configuration",
-        default=None
-    )
+    parser = argparse.ArgumentParser(description="Process meeting audio recordings with Azure services")
+    parser.add_argument("audio_file", help="Path to audio file to process")
+    parser.add_argument("-o", "--output", help="Output directory (default: same as input file)", default=None)
+    parser.add_argument("--skip-preprocessing", action="store_true", help="Skip audio preprocessing step")
+    parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR"], default="INFO", help="Logging level")
+    parser.add_argument("--env-file", help="Path to .env file with configuration", default=None)
 
     args = parser.parse_args()
 
@@ -294,9 +245,7 @@ def main():
     # Process audio
     try:
         results = processor.process_audio_file(
-            args.audio_file,
-            output_dir=args.output,
-            skip_preprocessing=args.skip_preprocessing
+            args.audio_file, output_dir=args.output, skip_preprocessing=args.skip_preprocessing
         )
         print("\n=== Processing Complete ===")
         print(f"Results saved to: {results['results_file']}")
