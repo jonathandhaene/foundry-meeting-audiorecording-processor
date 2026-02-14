@@ -8,7 +8,7 @@ speaker diarization and multilingual content.
 import logging
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -241,7 +241,7 @@ class AzureSpeechTranscriber:
                 "diarization_enabled": False,
                 "custom_terms_count": len(self.custom_terms),
                 "language_candidates": self.language_candidates,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         )
 
@@ -308,7 +308,7 @@ class AzureSpeechTranscriber:
                 "speakers": list(speakers),
                 "custom_terms_count": len(self.custom_terms),
                 "language_candidates": self.language_candidates,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         )
 
