@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class KeyPhrase:
     """Represents an extracted key phrase."""
+
     text: str
     score: float
 
@@ -30,6 +31,7 @@ class KeyPhrase:
 @dataclass
 class ActionItem:
     """Represents an identified action item."""
+
     text: str
     assignee: Optional[str] = None
     due_date: Optional[str] = None
@@ -38,6 +40,7 @@ class ActionItem:
 @dataclass
 class MeetingSummary:
     """Summary of meeting content analysis."""
+
     key_phrases: List[KeyPhrase]
     topics: List[str]
     action_items: List[ActionItem]
@@ -53,7 +56,7 @@ class MeetingSummary:
             "action_items": [asdict(ai) for ai in self.action_items],
             "sentiment": self.sentiment,
             "entities": self.entities,
-            "summary_text": self.summary_text
+            "summary_text": self.summary_text,
         }
 
 
@@ -63,12 +66,7 @@ class ContentAnalyzer:
     for content understanding and insight extraction.
     """
 
-    def __init__(
-        self,
-        text_analytics_key: str,
-        text_analytics_endpoint: str,
-        language: str = "en"
-    ):
+    def __init__(self, text_analytics_key: str, text_analytics_endpoint: str, language: str = "en"):
         """
         Initialize Content Analyzer.
 
@@ -82,22 +80,12 @@ class ContentAnalyzer:
         self.language = language
 
         if TextAnalyticsClient is None or AzureKeyCredential is None:
-            logger.error(
-                "Azure Text Analytics SDK not installed. "
-                "Install with: pip install azure-ai-textanalytics"
-            )
+            logger.error("Azure Text Analytics SDK not installed. " "Install with: pip install azure-ai-textanalytics")
             raise ImportError("Azure Text Analytics SDK not available")
 
-        self.client = TextAnalyticsClient(
-            endpoint=text_analytics_endpoint,
-            credential=AzureKeyCredential(text_analytics_key)
-        )
+        self.client = TextAnalyticsClient(endpoint=text_analytics_endpoint, credential=AzureKeyCredential(text_analytics_key))
 
-    def analyze_transcription(
-        self,
-        transcription_text: str,
-        extract_action_items: bool = True
-    ) -> MeetingSummary:
+    def analyze_transcription(self, transcription_text: str, extract_action_items: bool = True) -> MeetingSummary:
         """
         Analyze transcription text to extract insights.
 
@@ -130,11 +118,7 @@ class ContentAnalyzer:
             action_items = self._extract_action_items(transcription_text)
 
         # Generate summary
-        summary_text = self._generate_summary(
-            transcription_text,
-            key_phrases,
-            topics
-        )
+        summary_text = self._generate_summary(transcription_text, key_phrases, topics)
 
         return MeetingSummary(
             key_phrases=key_phrases,
@@ -142,16 +126,13 @@ class ContentAnalyzer:
             action_items=action_items,
             sentiment=sentiment,
             entities=entities,
-            summary_text=summary_text
+            summary_text=summary_text,
         )
 
     def _extract_key_phrases(self, documents: List[str]) -> List[KeyPhrase]:
         """Extract key phrases from documents."""
         try:
-            response = self.client.extract_key_phrases(
-                documents=documents,
-                language=self.language
-            )
+            response = self.client.extract_key_phrases(documents=documents, language=self.language)
 
             key_phrases = []
             for doc in response:
@@ -171,18 +152,9 @@ class ContentAnalyzer:
     def _analyze_sentiment(self, documents: List[str]) -> Dict[str, float]:
         """Analyze sentiment of documents."""
         try:
-            response = self.client.analyze_sentiment(
-                documents=documents,
-                language=self.language,
-                show_opinion_mining=True
-            )
+            response = self.client.analyze_sentiment(documents=documents, language=self.language, show_opinion_mining=True)
 
-            sentiment_scores = {
-                "positive": 0.0,
-                "neutral": 0.0,
-                "negative": 0.0,
-                "overall": "neutral"
-            }
+            sentiment_scores = {"positive": 0.0, "neutral": 0.0, "negative": 0.0, "overall": "neutral"}
 
             for doc in response:
                 if not doc.is_error:
@@ -201,21 +173,20 @@ class ContentAnalyzer:
     def _extract_entities(self, documents: List[str]) -> List[Dict[str, Any]]:
         """Extract named entities from documents."""
         try:
-            response = self.client.recognize_entities(
-                documents=documents,
-                language=self.language
-            )
+            response = self.client.recognize_entities(documents=documents, language=self.language)
 
             entities = []
             for doc in response:
                 if not doc.is_error:
                     for entity in doc.entities:
-                        entities.append({
-                            "text": entity.text,
-                            "category": entity.category,
-                            "subcategory": entity.subcategory,
-                            "confidence": entity.confidence_score
-                        })
+                        entities.append(
+                            {
+                                "text": entity.text,
+                                "category": entity.category,
+                                "subcategory": entity.subcategory,
+                                "confidence": entity.confidence_score,
+                            }
+                        )
 
             logger.info(f"Extracted {len(entities)} entities")
             return entities
@@ -243,21 +214,21 @@ class ContentAnalyzer:
     def _extract_action_items(self, text: str) -> List[ActionItem]:
         """
         Extract action items from text using pattern matching.
-        
+
         Looks for common action item patterns like:
         - "TODO:", "Action:", "Follow-up:"
         - Imperative sentences
         - Dates and assignments
         """
         action_items = []
-        
+
         # Simple pattern matching for common action item indicators
         import re
-        
+
         patterns = [
             r"(?:TODO|Action|Follow-up|Task):\s*(.+?)(?:\n|$)",
             r"(?:We need to|We should|Must|Will)\s+(.+?)(?:\.|,|\n|$)",
-            r"(?:@\w+)\s+(?:will|to|should)\s+(.+?)(?:\.|,|\n|$)"
+            r"(?:@\w+)\s+(?:will|to|should)\s+(.+?)(?:\.|,|\n|$)",
         ]
 
         for pattern in patterns:
@@ -270,15 +241,10 @@ class ContentAnalyzer:
         logger.info(f"Extracted {len(action_items)} action items")
         return action_items[:10]  # Return top 10
 
-    def _generate_summary(
-        self,
-        text: str,
-        key_phrases: List[KeyPhrase],
-        topics: List[str]
-    ) -> str:
+    def _generate_summary(self, text: str, key_phrases: List[KeyPhrase], topics: List[str]) -> str:
         """
         Generate a summary of the meeting.
-        
+
         This is a simple implementation. For production, consider using
         Azure's abstractive summarization or OpenAI GPT models.
         """
@@ -296,34 +262,30 @@ class ContentAnalyzer:
 
         return summary
 
-    def categorize_content(
-        self,
-        text: str,
-        categories: List[str]
-    ) -> Dict[str, float]:
+    def categorize_content(self, text: str, categories: List[str]) -> Dict[str, float]:
         """
         Categorize content into predefined categories.
-        
+
         Args:
             text: Text to categorize
             categories: List of category names
-        
+
         Returns:
             Dictionary mapping categories to confidence scores
         """
         # Placeholder for custom classification
         # In production, you might train a custom model or use
         # Azure Custom Text Classification
-        
+
         logger.info(f"Categorizing content into {len(categories)} categories")
-        
+
         # Simple keyword-based categorization
         scores = {}
         text_lower = text.lower()
-        
+
         for category in categories:
             # Count occurrences of category-related words
             count = text_lower.count(category.lower())
             scores[category] = min(1.0, count / 10.0)
-        
+
         return scores

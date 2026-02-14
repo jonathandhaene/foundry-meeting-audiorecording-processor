@@ -5,11 +5,7 @@ import sys
 from typing import Optional
 
 
-def setup_logging(
-    level: str = "INFO",
-    log_file: Optional[str] = None,
-    format_string: Optional[str] = None
-) -> None:
+def setup_logging(level: str = "INFO", log_file: Optional[str] = None, format_string: Optional[str] = None) -> None:
     """
     Set up application logging.
 
@@ -22,11 +18,7 @@ def setup_logging(
         format_string = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
     # Configure root logger
-    logging.basicConfig(
-        level=getattr(logging, level.upper()),
-        format=format_string,
-        handlers=[]
-    )
+    logging.basicConfig(level=getattr(logging, level.upper()), format=format_string, handlers=[])
 
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)

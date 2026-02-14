@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 @dataclass
 class AzureConfig:
     """Azure service configuration."""
+
     speech_key: str
     speech_region: str
     text_analytics_key: str
@@ -20,6 +21,7 @@ class AzureConfig:
 @dataclass
 class ProcessingConfig:
     """Audio processing configuration."""
+
     default_language: str = "en-US"
     enable_diarization: bool = True
     max_speakers: int = 10
@@ -51,7 +53,7 @@ class ConfigManager:
             text_analytics_key=self._get_required_env("AZURE_TEXT_ANALYTICS_KEY"),
             text_analytics_endpoint=self._get_required_env("AZURE_TEXT_ANALYTICS_ENDPOINT"),
             storage_connection_string=os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
-            storage_container_name=os.getenv("AZURE_STORAGE_CONTAINER_NAME", "meeting-audio-files")
+            storage_container_name=os.getenv("AZURE_STORAGE_CONTAINER_NAME", "meeting-audio-files"),
         )
 
     def get_processing_config(self) -> ProcessingConfig:
@@ -62,7 +64,7 @@ class ConfigManager:
             max_speakers=int(os.getenv("MAX_SPEAKERS", "10")),
             sample_rate=int(os.getenv("AUDIO_SAMPLE_RATE", "16000")),
             channels=int(os.getenv("AUDIO_CHANNELS", "1")),
-            apply_noise_reduction=os.getenv("APPLY_NOISE_REDUCTION", "true").lower() == "true"
+            apply_noise_reduction=os.getenv("APPLY_NOISE_REDUCTION", "true").lower() == "true",
         )
 
     def _get_required_env(self, key: str) -> str:
@@ -70,8 +72,7 @@ class ConfigManager:
         value = os.getenv(key)
         if not value:
             raise ValueError(
-                f"Required environment variable '{key}' not set. "
-                f"Please check your .env file or environment configuration."
+                f"Required environment variable '{key}' not set. " f"Please check your .env file or environment configuration."
             )
         return value
 
