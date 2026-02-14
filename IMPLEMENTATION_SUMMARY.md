@@ -82,7 +82,7 @@ Successfully implemented a complete web-based user interface for audio transcrip
 - Environment variable management
 
 #### CI/CD Pipeline (`.github/workflows/ci-cd.yml`)
-- **Testing**: Multi-version Python testing (3.9, 3.10, 3.11)
+- **Testing**: Multi-version Python testing (3.10, 3.11)
 - **Frontend Build**: Automated npm build
 - **Backend Deployment**: Azure App Service
 - **Frontend Deployment**: Azure Static Web App

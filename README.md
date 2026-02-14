@@ -92,7 +92,7 @@ A comprehensive end-to-end solution for processing meeting audio files with mult
 
 ## Prerequisites
 
-- Python 3.9 or higher
+- Python 3.10 or higher
 - Node.js 16+ (for Web UI)
 - FFmpeg (for audio processing)
 - Azure subscription with:
@@ -449,7 +449,7 @@ The repository includes automated CI/CD pipelines:
 ### Continuous Integration
 
 Triggered on push and pull requests:
-- Runs tests on multiple Python versions (3.9, 3.10, 3.11)
+- Runs tests on multiple Python versions (3.10, 3.11)
 - Performs linting and type checking
 - Generates coverage reports
 
