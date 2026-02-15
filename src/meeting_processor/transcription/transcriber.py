@@ -10,6 +10,12 @@ from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 
+# Azure Speech SDK imports (can be mocked in tests)
+try:
+    import azure.cognitiveservices.speech as speechsdk
+except ImportError:
+    speechsdk = None  # type: ignore
+
 logger = logging.getLogger(__name__)
 
 
@@ -91,14 +97,12 @@ class AzureSpeechTranscriber:
         self.custom_terms = custom_terms or []
         self.language_candidates = language_candidates or []
 
-        try:
-            import azure.cognitiveservices.speech as speechsdk
-
-            self.speechsdk = speechsdk
-            self._initialize_config()
-        except ImportError:
+        if speechsdk is None:
             logger.error("Azure Speech SDK not installed. Install with: pip install azure-cognitiveservices-speech")
-            raise
+            raise ImportError("azure-cognitiveservices-speech package is required but not installed")
+
+        self.speechsdk = speechsdk
+        self._initialize_config()
 
     def _initialize_config(self) -> None:
         """Initialize Azure Speech configuration."""
