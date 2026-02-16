@@ -3,29 +3,22 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 
-from meeting_processor.nlp import (
-    ContentAnalyzer,
-    MeetingSummary,
-    KeyPhrase,
-    ActionItem
-)
+from meeting_processor.nlp import ContentAnalyzer, MeetingSummary, KeyPhrase, ActionItem
 
 
 @pytest.fixture
 def mock_text_analytics():
     """Mock Azure Text Analytics client."""
-    with patch('meeting_processor.nlp.analyzer.TextAnalyticsClient') as mock_client:
+    with patch("meeting_processor.nlp.analyzer.TextAnalyticsClient") as mock_client:
         yield mock_client
 
 
 @pytest.fixture
 def analyzer(mock_text_analytics):
     """Create a ContentAnalyzer instance with mocked client."""
-    with patch('meeting_processor.nlp.analyzer.AzureKeyCredential'):
+    with patch("meeting_processor.nlp.analyzer.AzureKeyCredential"):
         return ContentAnalyzer(
-            text_analytics_key="test_key",
-            text_analytics_endpoint="https://test.endpoint.com",
-            language="en"
+            text_analytics_key="test_key", text_analytics_endpoint="https://test.endpoint.com", language="en"
         )
 
 
@@ -35,7 +28,7 @@ class TestKeyPhrase:
     def test_create_key_phrase(self):
         """Test creating a key phrase."""
         phrase = KeyPhrase(text="machine learning", score=0.95)
-        
+
         assert phrase.text == "machine learning"
         assert phrase.score == 0.95
 
@@ -45,12 +38,8 @@ class TestActionItem:
 
     def test_create_action_item(self):
         """Test creating an action item."""
-        item = ActionItem(
-            text="Follow up with client",
-            assignee="John",
-            due_date="2026-02-20"
-        )
-        
+        item = ActionItem(text="Follow up with client", assignee="John", due_date="2026-02-20")
+
         assert item.text == "Follow up with client"
         assert item.assignee == "John"
         assert item.due_date == "2026-02-20"
@@ -58,7 +47,7 @@ class TestActionItem:
     def test_action_item_optional_fields(self):
         """Test action item with optional fields."""
         item = ActionItem(text="Send report")
-        
+
         assert item.text == "Send report"
         assert item.assignee is None
         assert item.due_date is None
@@ -75,9 +64,9 @@ class TestMeetingSummary:
             action_items=[ActionItem("task1")],
             sentiment={"positive": 0.8, "neutral": 0.2, "negative": 0.0},
             entities=[{"text": "Microsoft", "category": "Organization"}],
-            summary_text="This is a summary"
+            summary_text="This is a summary",
         )
-        
+
         assert len(summary.key_phrases) == 1
         assert len(summary.topics) == 2
         assert len(summary.action_items) == 1
@@ -91,11 +80,11 @@ class TestMeetingSummary:
             action_items=[],
             sentiment={},
             entities=[],
-            summary_text="Summary"
+            summary_text="Summary",
         )
-        
+
         result = summary.to_dict()
-        
+
         assert isinstance(result, dict)
         assert "key_phrases" in result
         assert "topics" in result
@@ -107,13 +96,11 @@ class TestContentAnalyzer:
 
     def test_initialization(self, mock_text_analytics):
         """Test analyzer initialization."""
-        with patch('meeting_processor.nlp.analyzer.AzureKeyCredential'):
+        with patch("meeting_processor.nlp.analyzer.AzureKeyCredential"):
             analyzer = ContentAnalyzer(
-                text_analytics_key="test_key",
-                text_analytics_endpoint="https://test.endpoint.com",
-                language="en"
+                text_analytics_key="test_key", text_analytics_endpoint="https://test.endpoint.com", language="en"
             )
-            
+
             assert analyzer.text_analytics_key == "test_key"
             assert analyzer.language == "en"
 
@@ -122,11 +109,11 @@ class TestContentAnalyzer:
         key_phrases = [
             KeyPhrase("machine learning", 0.95),
             KeyPhrase("artificial intelligence", 0.90),
-            KeyPhrase("machine learning", 0.85)  # Duplicate
+            KeyPhrase("machine learning", 0.85),  # Duplicate
         ]
-        
+
         topics = analyzer._extract_topics(key_phrases)
-        
+
         assert "machine learning" in topics
         assert "artificial intelligence" in topics
         assert len(topics) == 2  # No duplicates
@@ -138,18 +125,18 @@ class TestContentAnalyzer:
         We need to schedule a follow-up meeting
         Action: Send the report to the team
         """
-        
+
         action_items = analyzer._extract_action_items(text)
-        
+
         assert len(action_items) > 0
         assert any("documentation" in item.text.lower() for item in action_items)
 
     def test_extract_action_items_no_matches(self, analyzer):
         """Test action item extraction with no matches."""
         text = "This is a simple text without action items."
-        
+
         action_items = analyzer._extract_action_items(text)
-        
+
         # Should return empty list or very few items
         assert isinstance(action_items, list)
 
@@ -158,9 +145,9 @@ class TestContentAnalyzer:
         text = "First sentence. Second sentence. Third sentence. Fourth sentence."
         key_phrases = [KeyPhrase("topic1", 0.9), KeyPhrase("topic2", 0.8)]
         topics = ["topic1", "topic2"]
-        
+
         summary = analyzer._generate_summary(text, key_phrases, topics)
-        
+
         assert isinstance(summary, str)
         assert len(summary) > 0
         assert "topic1" in summary or "topic2" in summary
@@ -169,9 +156,9 @@ class TestContentAnalyzer:
         """Test categorizing content."""
         text = "We discussed security and privacy concerns in detail."
         categories = ["security", "privacy", "performance"]
-        
+
         scores = analyzer.categorize_content(text, categories)
-        
+
         assert isinstance(scores, dict)
         assert "security" in scores
         assert "privacy" in scores

@@ -53,19 +53,14 @@ class TestRootEndpoints:
 class TestTranscriptionEndpoint:
     """Test transcription upload and job creation."""
 
-    @patch('meeting_processor.api.app.process_transcription')
+    @patch("meeting_processor.api.app.process_transcription")
     def test_upload_audio_file_azure(self, mock_process, client, mock_audio_file):
         """Test uploading audio file with Azure method."""
-        with open(mock_audio_file, 'rb') as f:
+        with open(mock_audio_file, "rb") as f:
             response = client.post(
                 "/api/transcribe",
                 files={"file": ("test.wav", f, "audio/wav")},
-                data={
-                    "method": "azure",
-                    "language": "en-US",
-                    "enable_diarization": "true",
-                    "enable_nlp": "true"
-                }
+                data={"method": "azure", "language": "en-US", "enable_diarization": "true", "enable_nlp": "true"},
             )
 
         assert response.status_code == 200
@@ -81,18 +76,14 @@ class TestTranscriptionEndpoint:
         assert job["language"] == "en-US"
         assert job["enable_diarization"] is True
 
-    @patch('meeting_processor.api.app.process_transcription')
+    @patch("meeting_processor.api.app.process_transcription")
     def test_upload_audio_file_whisper(self, mock_process, client, mock_audio_file):
         """Test uploading audio file with Whisper method."""
-        with open(mock_audio_file, 'rb') as f:
+        with open(mock_audio_file, "rb") as f:
             response = client.post(
                 "/api/transcribe",
                 files={"file": ("test.wav", f, "audio/wav")},
-                data={
-                    "method": "whisper_local",
-                    "whisper_model": "base",
-                    "enable_nlp": "false"
-                }
+                data={"method": "whisper_local", "whisper_model": "base", "enable_nlp": "false"},
             )
 
         assert response.status_code == 200
@@ -107,10 +98,7 @@ class TestTranscriptionEndpoint:
 
     def test_upload_without_file(self, client):
         """Test that uploading without a file returns error."""
-        response = client.post(
-            "/api/transcribe",
-            data={"method": "azure"}
-        )
+        response = client.post("/api/transcribe", data={"method": "azure"})
         assert response.status_code == 422  # Validation error
 
 
@@ -129,7 +117,7 @@ class TestJobStatusEndpoint:
             "created_at": "2024-01-01T00:00:00",
             "updated_at": "2024-01-01T00:01:00",
             "result": {"transcription": {"full_text": "Test transcription"}},
-            "error": None
+            "error": None,
         }
 
         response = client.get(f"/api/jobs/{job_id}")
@@ -164,14 +152,14 @@ class TestListJobsEndpoint:
             "status": "completed",
             "filename": "file1.wav",
             "method": "azure",
-            "created_at": "2024-01-01T00:00:00"
+            "created_at": "2024-01-01T00:00:00",
         }
         jobs_db["job2"] = {
             "job_id": "job2",
             "status": "processing",
             "filename": "file2.wav",
             "method": "whisper_local",
-            "created_at": "2024-01-01T00:01:00"
+            "created_at": "2024-01-01T00:01:00",
         }
 
         response = client.get("/api/jobs")
@@ -198,7 +186,7 @@ class TestDeleteJobEndpoint:
             "file_path": temp_file.name,
             "filename": "test.wav",
             "method": "azure",
-            "created_at": "2024-01-01T00:00:00"
+            "created_at": "2024-01-01T00:00:00",
         }
 
         response = client.delete(f"/api/jobs/{job_id}")
@@ -216,15 +204,10 @@ class TestDeleteJobEndpoint:
 class TestProcessTranscription:
     """Test background transcription processing."""
 
-    @patch('meeting_processor.api.app.ConfigManager')
-    @patch('meeting_processor.api.app.AudioPreprocessor')
-    @patch('meeting_processor.api.app.AzureSpeechTranscriber')
-    def test_process_transcription_azure_success(
-        self,
-        mock_transcriber_class,
-        mock_preprocessor_class,
-        mock_config_class
-    ):
+    @patch("meeting_processor.api.app.ConfigManager")
+    @patch("meeting_processor.api.app.AudioPreprocessor")
+    @patch("meeting_processor.api.app.AzureSpeechTranscriber")
+    def test_process_transcription_azure_success(self, mock_transcriber_class, mock_preprocessor_class, mock_config_class):
         """Test successful Azure transcription processing."""
         from meeting_processor.api.app import process_transcription
         from meeting_processor.transcription.transcriber import TranscriptionResult, TranscriptionSegment
@@ -243,18 +226,12 @@ class TestProcessTranscription:
         mock_transcriber = Mock()
         mock_result = TranscriptionResult(
             segments=[
-                TranscriptionSegment(
-                    text="Hello world",
-                    start_time=0.0,
-                    end_time=2.0,
-                    speaker_id="Speaker-1",
-                    confidence=0.95
-                )
+                TranscriptionSegment(text="Hello world", start_time=0.0, end_time=2.0, speaker_id="Speaker-1", confidence=0.95)
             ],
             full_text="Hello world",
             duration=2.0,
             language="en-US",
-            metadata={"diarization_enabled": True}
+            metadata={"diarization_enabled": True},
         )
         mock_transcriber.transcribe_audio.return_value = mock_result
         mock_transcriber_class.return_value = mock_transcriber
@@ -266,7 +243,7 @@ class TestProcessTranscription:
             "status": "pending",
             "file_path": "/tmp/test.wav",
             "created_at": "2024-01-01T00:00:00",
-            "updated_at": "2024-01-01T00:00:00"
+            "updated_at": "2024-01-01T00:00:00",
         }
 
         # Process transcription
@@ -278,7 +255,7 @@ class TestProcessTranscription:
             enable_diarization=True,
             chunk_size=None,
             whisper_model="base",
-            enable_nlp=False
+            enable_nlp=False,
         )
 
         # Verify job completed successfully
@@ -287,13 +264,9 @@ class TestProcessTranscription:
         assert "transcription" in jobs_db[job_id]["result"]
         assert jobs_db[job_id]["error"] is None
 
-    @patch('meeting_processor.api.app.ConfigManager')
-    @patch('meeting_processor.api.app.AudioPreprocessor')
-    def test_process_transcription_failure(
-        self,
-        mock_preprocessor_class,
-        mock_config_class
-    ):
+    @patch("meeting_processor.api.app.ConfigManager")
+    @patch("meeting_processor.api.app.AudioPreprocessor")
+    def test_process_transcription_failure(self, mock_preprocessor_class, mock_config_class):
         """Test transcription processing with error."""
         from meeting_processor.api.app import process_transcription
 
@@ -310,7 +283,7 @@ class TestProcessTranscription:
             "status": "pending",
             "file_path": "/tmp/test.wav",
             "created_at": "2024-01-01T00:00:00",
-            "updated_at": "2024-01-01T00:00:00"
+            "updated_at": "2024-01-01T00:00:00",
         }
 
         # Process transcription
@@ -322,7 +295,7 @@ class TestProcessTranscription:
             enable_diarization=True,
             chunk_size=None,
             whisper_model="base",
-            enable_nlp=False
+            enable_nlp=False,
         )
 
         # Verify job failed
