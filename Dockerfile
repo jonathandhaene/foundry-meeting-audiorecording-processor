@@ -24,5 +24,10 @@ RUN mkdir -p /tmp/meeting_transcription
 # Expose port
 EXPOSE 8000
 
-# Run the application
-CMD ["uvicorn", "meeting_processor.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Set default environment variables for secure binding
+# Override API_HOST=0.0.0.0 in production deployments if needed
+ENV API_HOST=127.0.0.1
+ENV API_PORT=8000
+
+# Run the application using Python module to respect environment variables
+CMD ["python", "-m", "meeting_processor.api.app"]

@@ -86,7 +86,10 @@ Create startup command file `startup.sh`:
 ```bash
 #!/bin/bash
 cd /home/site/wwwroot
-python -m uvicorn meeting_processor.api.app:app --host 0.0.0.0 --port 8000
+# Set API_HOST=0.0.0.0 for production to allow external access
+export API_HOST=0.0.0.0
+export API_PORT=8000
+python -m meeting_processor.api.app
 ```
 
 Configure startup command:
@@ -179,8 +182,13 @@ RUN pip install -e .
 # Expose port
 EXPOSE 8000
 
+# Set default to secure localhost binding
+# Override API_HOST=0.0.0.0 at runtime for production deployments
+ENV API_HOST=127.0.0.1
+ENV API_PORT=8000
+
 # Run the application
-CMD ["uvicorn", "meeting_processor.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "meeting_processor.api.app"]
 ```
 
 ### Frontend Dockerfile
@@ -243,6 +251,10 @@ services:
     ports:
       - "8000:8000"
     environment:
+      # API server binding - set to 0.0.0.0 to accept connections from other containers
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      # Azure credentials
       - AZURE_SPEECH_KEY=${AZURE_SPEECH_KEY}
       - AZURE_SPEECH_REGION=${AZURE_SPEECH_REGION}
       - AZURE_TEXT_ANALYTICS_KEY=${AZURE_TEXT_ANALYTICS_KEY}

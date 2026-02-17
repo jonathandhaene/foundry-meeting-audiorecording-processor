@@ -470,6 +470,14 @@ Weekly security scans using:
 
 ## Configuration Options
 
+### API Server
+
+- `API_HOST`: Host binding address (default: `127.0.0.1` for security)
+  - Use `127.0.0.1` (localhost) for local development and testing
+  - Set to `0.0.0.0` in production deployments when the API needs to be accessible from external networks
+  - Can be configured via environment variable in Docker, Azure App Service, or other deployment environments
+- `API_PORT`: Server port (default: `8000`)
+
 ### Audio Processing
 
 - `AUDIO_SAMPLE_RATE`: Target sample rate (default: 16000 Hz)
