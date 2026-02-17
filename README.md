@@ -470,6 +470,15 @@ Weekly security scans using:
 
 ## Configuration Options
 
+### API Server
+
+- `API_HOST`: Host binding address for the API server
+  - **Local development**: Default is `127.0.0.1` (localhost only) when running `python -m meeting_processor.api.app` for security
+  - **Docker containers**: Default is `0.0.0.0` (all interfaces) since container networking provides isolation
+  - **Production deployments**: Set to `0.0.0.0` in Azure App Service or other cloud platforms when needed
+  - Configure via environment variable: `export API_HOST=0.0.0.0`
+- `API_PORT`: Server port (default: `8000`)
+
 ### Audio Processing
 
 - `AUDIO_SAMPLE_RATE`: Target sample rate (default: 16000 Hz)

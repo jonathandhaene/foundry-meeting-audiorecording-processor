@@ -86,7 +86,10 @@ Create startup command file `startup.sh`:
 ```bash
 #!/bin/bash
 cd /home/site/wwwroot
-python -m uvicorn meeting_processor.api.app:app --host 0.0.0.0 --port 8000
+# Set API_HOST=0.0.0.0 for production to allow external access
+export API_HOST=0.0.0.0
+export API_PORT=8000
+python -m uvicorn meeting_processor.api.app:app --host ${API_HOST} --port ${API_PORT}
 ```
 
 Configure startup command:
@@ -176,11 +179,35 @@ COPY setup.py .
 # Install the package
 RUN pip install -e .
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose port
 EXPOSE 8000
 
-# Run the application
-CMD ["uvicorn", "meeting_processor.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Set default environment variables
+# In Docker, default to 0.0.0.0 since container networking provides isolation
+# Override at runtime with -e API_HOST=<value> if needed
+ENV API_HOST=0.0.0.0
+ENV API_PORT=8000
+
+# Run the application using entrypoint script
+ENTRYPOINT ["docker-entrypoint.sh"]
+```
+
+Create `docker-entrypoint.sh`:
+
+```bash
+#!/bin/bash
+set -e
+
+# Default environment variables (can be overridden at runtime)
+: ${API_HOST:=0.0.0.0}
+: ${API_PORT:=8000}
+
+# Run uvicorn with exec to properly handle signals
+exec python -m uvicorn meeting_processor.api.app:app --host "${API_HOST}" --port "${API_PORT}"
 ```
 
 ### Frontend Dockerfile
@@ -243,6 +270,10 @@ services:
     ports:
       - "8000:8000"
     environment:
+      # API server binding - set to 0.0.0.0 to accept connections from other containers
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      # Azure credentials
       - AZURE_SPEECH_KEY=${AZURE_SPEECH_KEY}
       - AZURE_SPEECH_REGION=${AZURE_SPEECH_REGION}
       - AZURE_TEXT_ANALYTICS_KEY=${AZURE_TEXT_ANALYTICS_KEY}
