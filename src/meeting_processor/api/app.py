@@ -632,4 +632,8 @@ def export_as_pdf(transcription: Dict[str, Any], nlp_analysis: Optional[Dict[str
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Use environment variable for host binding, default to localhost for security
+    # Set API_HOST=0.0.0.0 in production environments where needed
+    host = os.getenv("API_HOST", "127.0.0.1")
+    port = int(os.getenv("API_PORT", "8000"))
+    uvicorn.run(app, host=host, port=port)
