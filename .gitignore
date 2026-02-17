@@ -43,6 +43,7 @@ coverage.xml
 htmlcov/
 .tox/
 test-results.xml
+bandit-report.json
 
 # Environment variables
 .env
