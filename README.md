@@ -472,10 +472,11 @@ Weekly security scans using:
 
 ### API Server
 
-- `API_HOST`: Host binding address (default: `127.0.0.1` for security)
-  - Use `127.0.0.1` (localhost) for local development and testing
-  - Set to `0.0.0.0` in production deployments when the API needs to be accessible from external networks
-  - Can be configured via environment variable in Docker, Azure App Service, or other deployment environments
+- `API_HOST`: Host binding address for the API server
+  - **Local development**: Default is `127.0.0.1` (localhost only) when running `python -m meeting_processor.api.app` for security
+  - **Docker containers**: Default is `0.0.0.0` (all interfaces) since container networking provides isolation
+  - **Production deployments**: Set to `0.0.0.0` in Azure App Service or other cloud platforms when needed
+  - Configure via environment variable: `export API_HOST=0.0.0.0`
 - `API_PORT`: Server port (default: `8000`)
 
 ### Audio Processing

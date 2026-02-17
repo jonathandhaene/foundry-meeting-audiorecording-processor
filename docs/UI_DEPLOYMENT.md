@@ -89,7 +89,7 @@ cd /home/site/wwwroot
 # Set API_HOST=0.0.0.0 for production to allow external access
 export API_HOST=0.0.0.0
 export API_PORT=8000
-python -m meeting_processor.api.app
+python -m uvicorn meeting_processor.api.app:app --host ${API_HOST} --port ${API_PORT}
 ```
 
 Configure startup command:
@@ -182,13 +182,14 @@ RUN pip install -e .
 # Expose port
 EXPOSE 8000
 
-# Set default to secure localhost binding
-# Override API_HOST=0.0.0.0 at runtime for production deployments
-ENV API_HOST=127.0.0.1
+# Set default environment variables
+# In Docker, default to 0.0.0.0 since container networking provides isolation
+# Override at runtime with -e API_HOST=<value> if needed
+ENV API_HOST=0.0.0.0
 ENV API_PORT=8000
 
 # Run the application
-CMD ["python", "-m", "meeting_processor.api.app"]
+CMD python -m uvicorn meeting_processor.api.app:app --host ${API_HOST} --port ${API_PORT}
 ```
 
 ### Frontend Dockerfile
