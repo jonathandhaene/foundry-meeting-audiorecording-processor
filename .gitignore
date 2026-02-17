@@ -42,6 +42,7 @@ ENV/
 coverage.xml
 htmlcov/
 .tox/
+test-results.xml
 
 # Environment variables
 .env
