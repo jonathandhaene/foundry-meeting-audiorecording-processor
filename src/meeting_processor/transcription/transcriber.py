@@ -325,8 +325,8 @@ class AzureSpeechTranscriber:
             nbest = details.get("NBest", [])
             if nbest:
                 return nbest[0].get("Confidence", 0.0)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Could not extract confidence score from result: {e}")
         return 0.0
 
     def transcribe_realtime(self, audio_stream):

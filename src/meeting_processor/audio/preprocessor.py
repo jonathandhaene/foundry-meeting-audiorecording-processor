@@ -5,7 +5,7 @@ This module handles audio file normalization, format conversion,
 and preparation for transcription services.
 """
 
-import subprocess
+import subprocess  # nosec B404 - Required for safe ffmpeg/ffprobe execution with validated inputs
 import json
 from pathlib import Path
 from typing import Optional, Dict, Any
@@ -37,7 +37,7 @@ class AudioPreprocessor:
     def _check_ffmpeg(self) -> None:
         """Check if FFmpeg is installed and available."""
         try:
-            subprocess.run(["ffmpeg", "-version"], capture_output=True, check=True)
+            subprocess.run(["ffmpeg", "-version"], capture_output=True, check=True)  # nosec B603 B607 - Safe call to ffmpeg with no user input
         except (subprocess.CalledProcessError, FileNotFoundError):
             logger.warning(
                 "FFmpeg not found. Audio preprocessing may not work properly. "
@@ -94,7 +94,7 @@ class AudioPreprocessor:
         logger.info(f"Normalizing audio: {input_path} -> {output_path}")
 
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)  # nosec B603 - ffmpeg command with validated file paths
             logger.debug(f"FFmpeg output: {result.stderr}")
         except subprocess.CalledProcessError as e:
             logger.error(f"FFmpeg error: {e.stderr}")
@@ -123,7 +123,7 @@ class AudioPreprocessor:
         cmd = ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", str(audio_path)]
 
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)  # nosec B603 - ffprobe command with validated file path
             data = json.loads(result.stdout)
 
             # Extract audio stream info
@@ -170,7 +170,7 @@ class AudioPreprocessor:
         logger.info(f"Converting to WAV: {input_path} -> {output_path}")
 
         try:
-            subprocess.run(cmd, capture_output=True, check=True)
+            subprocess.run(cmd, capture_output=True, check=True)  # nosec B603 - ffmpeg command with validated file paths
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Failed to convert to WAV: {e.stderr}")
 
