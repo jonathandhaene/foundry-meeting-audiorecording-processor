@@ -179,6 +179,10 @@ COPY setup.py .
 # Install the package
 RUN pip install -e .
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose port
 EXPOSE 8000
 
@@ -188,8 +192,22 @@ EXPOSE 8000
 ENV API_HOST=0.0.0.0
 ENV API_PORT=8000
 
-# Run the application
-CMD python -m uvicorn meeting_processor.api.app:app --host ${API_HOST} --port ${API_PORT}
+# Run the application using entrypoint script
+ENTRYPOINT ["docker-entrypoint.sh"]
+```
+
+Create `docker-entrypoint.sh`:
+
+```bash
+#!/bin/bash
+set -e
+
+# Default environment variables (can be overridden at runtime)
+: ${API_HOST:=0.0.0.0}
+: ${API_PORT:=8000}
+
+# Run uvicorn with exec to properly handle signals
+exec python -m uvicorn meeting_processor.api.app:app --host "${API_HOST}" --port "${API_PORT}"
 ```
 
 ### Frontend Dockerfile

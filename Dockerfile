@@ -21,6 +21,10 @@ RUN pip install -e .
 # Create temp directory for file processing
 RUN mkdir -p /tmp/meeting_transcription
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose port
 EXPOSE 8000
 
@@ -30,5 +34,5 @@ EXPOSE 8000
 ENV API_HOST=0.0.0.0
 ENV API_PORT=8000
 
-# Run the application using shell form to enable env var substitution
-CMD python -m uvicorn meeting_processor.api.app:app --host ${API_HOST} --port ${API_PORT}
+# Run the application using entrypoint script for proper signal handling
+ENTRYPOINT ["docker-entrypoint.sh"]
