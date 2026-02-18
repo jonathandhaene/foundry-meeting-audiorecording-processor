@@ -220,7 +220,7 @@ The interface is fully localized in all 24 official EU languages:
 - Bulgarian, Czech, Danish, Greek, Estonian, Finnish, Irish, Croatian
 - Hungarian, Lithuanian, Latvian, Maltese, Romanian, Slovak, Slovenian, Swedish
 
-Your preferred language is automatically detected from your browser settings, and you can change it anytime using the language selector. See the [Translation Guide](docs/TRANSLATION_GUIDE.md) for information on adding or updating translations.
+Your preferred language is automatically detected from your browser settings, and you can change it anytime using the language selector. See the [Multilingual Support Documentation](docs/MULTILINGUAL_SUPPORT.md) for information on adding or updating translations.
 
 **New Feature: Custom Terms & Multi-language Support**
 

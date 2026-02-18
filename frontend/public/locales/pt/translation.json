@@ -24,7 +24,38 @@
     "azureOnly": "(apenas Azure)",
     "enableNlp": "Ativar Análise NLP (frases-chave, sentimento, etc.)",
     "uploadButton": "Transcrever",
-    "uploadingButton": "A carregar..."
+    "uploadingButton": "A carregar...",
+    "formLabel": "Transcription configuration form",
+    "azureSectionTitle": "🎙 Azure AI Speech Settings",
+    "whisperSectionTitle": "🤖 Azure Whisper Settings",
+    "nlpSectionTitle": "📊 NLP Analysis Settings",
+    "profanityFilter": "Profanity Filter",
+    "profanityMasked": "Masked (****)",
+    "profanityRemoved": "Removed",
+    "profanityRaw": "Raw (no filter)",
+    "maxSpeakers": "Max Speakers",
+    "maxSpeakersHelp": "Maximum number of speakers to detect (1-36)",
+    "wordLevelTimestamps": "Enable word-level timestamps",
+    "temperature": "Temperature",
+    "temperatureHelp": "0 = deterministic, higher = more creative. Lower values recommended for transcription.",
+    "initialPrompt": "Initial Prompt",
+    "initialPromptPlaceholder": "Optional text to guide the model's style or continue a previous segment...",
+    "initialPromptHelp": "Guide the transcription style. Include terms, acronyms, or context. Max ~224 tokens ({{count}}/800 characters).",
+    "summaryLength": "Summary Length",
+    "summaryLengthValue": "{{count}} sentences",
+    "nlpSegmentSentiment": "Per-Segment Sentiment",
+    "sentimentThreshold": "Sentiment Confidence Threshold",
+    "sentimentThresholdHelp": "Default: 60%. Higher = only strong emotions shown, lower = more sensitive.",
+    "nlpKeyPhrases": "Key Phrases",
+    "nlpEntities": "Entity Recognition",
+    "nlpActionItems": "Action Items",
+    "nlpSummary": "Summary",
+    "preprocessingSectionTitle": "🔊 Audio Pre-processing",
+    "audioChannels": "Channels",
+    "channelsMono": "1 – Mono (recommended)",
+    "channelsStereo": "2 – Stereo",
+    "audioSampleRate": "Sample Rate",
+    "audioBitRate": "Bit Rate"
   },
   "methods": {
     "azure": "Azure Speech Services",
@@ -69,7 +100,13 @@
     "nlp": {
       "title": "Análise NLP:",
       "keyPhrases": "Frases-Chave:",
-      "sentiment": "Sentimento:"
+      "sentiment": "Sentimento:",
+      "summary": "Summary",
+      "actionItems": "Action Items",
+      "topics": "Topics",
+      "entities": "Entities",
+      "noActionItems": "No action items detected",
+      "noKeyPhrases": "No key phrases detected"
     }
   },
   "errors": {
@@ -79,5 +116,131 @@
   "languageSelector": {
     "label": "Idioma:",
     "tooltip": "Selecione o seu idioma preferido"
+  },
+  "tooltips": {
+    "audioFile": "Choose an audio file from your computer (MP3, WAV, M4A, etc.). This is the recording you want to convert to text.",
+    "method": "Pick how your audio gets converted to text. Azure AI Speech is best for multi-speaker meetings. Azure Whisper is great for general-purpose transcription.",
+    "languageCandidates": "If your meeting has people speaking multiple languages, list the possible language codes here (e.g. en-US,nl-NL). The system will detect which language is being spoken in each part.",
+    "profanityFilter": "Choose how swear words are handled: Masked replaces them with ****, Removed deletes them entirely, Raw keeps them as-is.",
+    "maxSpeakers": "Set the maximum number of distinct speakers you expect in the recording. A higher number won't hurt accuracy but helps the system prepare for larger meetings.",
+    "wordLevelTimestamps": "When enabled, each individual word gets its own timestamp — useful if you need precise timing for captions or subtitles.",
+    "temperature": "Controls randomness in the transcription. Keep it at 0 for the most accurate results. Higher values may produce varied but less reliable output.",
+    "initialPrompt": "Give the AI context about your audio — names of people, technical terms, or the topic being discussed. This helps it transcribe unfamiliar words correctly.",
+    "language": "Specify the language spoken in the recording (e.g. en-US for American English). Leave empty to let the system detect it automatically.",
+    "customTerms": "List specialised words, acronyms, or names that the AI might not recognise — like product names, project codes, or technical jargon. One per line or comma-separated.",
+    "termsFile": "Instead of typing custom terms one by one, upload a text file (.txt or .csv) containing your vocabulary list — one term per line.",
+    "enableDiarization": "Speaker diarization figures out \"who said what\" in your recording. It labels each part of the conversation with a speaker name. Essential for meetings with multiple participants.",
+    "enableNlp": "Turns on smart text analysis after transcription. This extracts a summary, key phrases, sentiment (positive/negative tone), named entities, and action items from your meeting.",
+    "summaryLength": "Controls how long the auto-generated summary will be. A higher number of sentences means a more detailed summary; lower means a brief overview.",
+    "nlpSegmentSentiment": "Analyses the emotional tone of each individual speech segment, so you can see how sentiment changed throughout the meeting.",
+    "sentimentThreshold": "Minimum confidence score required to label a segment as positive or negative. Segments below this threshold are marked as neutral. Higher values mean only strong sentiments are shown; lower values make detection more sensitive.",
+    "nlpKeyPhrases": "Automatically extracts the most important words and phrases from the transcription — great for a quick overview of what was discussed.",
+    "nlpEntities": "Finds and labels people, organisations, locations, dates, and other named things mentioned in the meeting.",
+    "nlpActionItems": "Detects commitments and to-dos mentioned during the meeting, like \"John will send the report by Friday\".",
+    "nlpSummary": "Generates a concise summary of the entire meeting, capturing the main points discussed.",
+    "audioChannels": "Number of audio channels. Use 1 (mono) for best speech recognition results. Use 2 (stereo) only if your recording has separate speaker channels.",
+    "audioSampleRate": "Audio sample rate in Hz. 16 kHz is optimal for speech recognition. Higher rates preserve more audio detail but increase processing time and file size.",
+    "audioBitRate": "Audio encoding bit rate. Lower values reduce file size, higher values preserve quality. 16k is sufficient for speech; use higher for music or high-fidelity recordings."
+  },
+  "notifications": {
+    "jobStarted": "Transcription started",
+    "jobCompleted": "Transcription completed: {{filename}}",
+    "jobFailed": "Transcription failed: {{filename}}",
+    "jobDeleted": "Job deleted successfully",
+    "jobDeleteFailed": "Failed to delete job"
+  },
+  "export": {
+    "button": "Export",
+    "exporting": "Exporting...",
+    "error": "Export failed. Please try again.",
+    "formats": {
+      "txt": "Plain Text (.txt)",
+      "docx": "Word Document (.docx)",
+      "pdf": "PDF Document (.pdf)"
+    }
+  },
+  "audio": {
+    "play": "Play",
+    "pause": "Pause",
+    "seek": "Seek",
+    "volume": "Volume"
+  },
+  "accessibility": {
+    "skipToContent": "Skip to main content",
+    "toggleControls": "Toggle accessibility controls",
+    "settings": "Accessibility Settings",
+    "title": "Accessibility",
+    "fontSize": "Font Size",
+    "fontNormal": "Normal",
+    "fontLarge": "Large",
+    "fontXLarge": "Extra Large",
+    "highContrast": "High Contrast Mode",
+    "keyboardInfo": "Use Tab to navigate, Enter to activate buttons"
+  },
+  "themes": {
+    "light": "Light",
+    "dark": "Dark",
+    "ocean": "Ocean",
+    "forest": "Forest",
+    "sunset": "Sunset",
+    "selectTheme": "Select theme",
+    "chooseTheme": "Choose a Theme",
+    "toggle": "Switch to {{mode}} mode"
+  },
+  "didYouKnow": {
+    "title": "Did You Know?",
+    "close": "Close",
+    "fact1": "🌍 There are over 7,000 languages spoken in the world today!",
+    "fact2": "🎤 The first voice recording ever made was \"Mary had a little lamb\" in 1877!",
+    "fact3": "🤖 AI transcription can now recognize speech in over 100 languages!",
+    "fact4": "🗣️ Speaker diarization helps identify who said what in a conversation!",
+    "fact5": "🎵 The human voice range is typically 85-255 Hz for males and 165-255 Hz for females!",
+    "fact6": "📝 Transcription accuracy has improved by over 30% in the last 5 years!",
+    "fact7": "🌏 Mandarin Chinese is the most spoken native language with over 900 million speakers!",
+    "fact8": "🔊 Audio processing can remove background noise while preserving speech quality!",
+    "fact9": "💬 The average person speaks at 110-150 words per minute!",
+    "fact10": "🎙️ Professional transcriptionists can type 75-100 words per minute!",
+    "fact11": "🧠 NLP can extract sentiment and key phrases from transcribed text!",
+    "fact12": "🌟 Whisper AI can transcribe and translate simultaneously!",
+    "fact13": "📊 Voice recognition technology dates back to the 1950s!",
+    "fact14": "🎯 Custom vocabulary improves transcription accuracy by up to 15%!",
+    "fact15": "🌈 Some languages have sounds that don't exist in others!"
+  },
+  "badges": {
+    "title": "Achievements",
+    "viewBadges": "View badges",
+    "earned": "Badge Earned!",
+    "first_transcription": {
+      "name": "First Steps",
+      "description": "Complete your first transcription"
+    },
+    "five_transcriptions": {
+      "name": "Getting Started",
+      "description": "Complete 5 transcriptions"
+    },
+    "ten_transcriptions": {
+      "name": "Professional",
+      "description": "Complete 10 transcriptions"
+    },
+    "one_hour": {
+      "name": "Hour Master",
+      "description": "Transcribe 1 hour of audio"
+    },
+    "five_hours": {
+      "name": "Time Keeper",
+      "description": "Transcribe 5 hours of audio"
+    },
+    "multilingual": {
+      "name": "Polyglot",
+      "description": "Transcribe in 3 different languages"
+    },
+    "nlp_user": {
+      "name": "NLP Explorer",
+      "description": "Use NLP analysis 5 times"
+    },
+    "diarization_expert": {
+      "name": "Speaker Pro",
+      "description": "Use speaker diarization 10 times"
+    }
   }
 }
