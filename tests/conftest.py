@@ -49,8 +49,12 @@ def mock_external_modules():
 
     # Cleanup temporary directory after all tests
     import shutil
+    import logging
 
     if "TRANSCRIPTION_DIR" in os.environ:
         temp_dir = os.environ["TRANSCRIPTION_DIR"]
         if temp_dir and Path(temp_dir).exists():
-            shutil.rmtree(temp_dir, ignore_errors=True)
+            try:
+                shutil.rmtree(temp_dir)
+            except Exception as e:
+                logging.warning(f"Failed to cleanup test transcription directory {temp_dir}: {e}")
