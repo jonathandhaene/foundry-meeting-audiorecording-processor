@@ -51,14 +51,18 @@ function App() {
   // Whisper advanced
   const [whisperTemperature, setWhisperTemperature] = useState(0);
   const [whisperPrompt, setWhisperPrompt] = useState('');
+  // Audio pre-processing
+  const [audioChannels, setAudioChannels] = useState(1);
+  const [audioSampleRate, setAudioSampleRate] = useState(16000);
+  const [audioBitRate, setAudioBitRate] = useState('16k');
   // NLP advanced
   const [summarySentenceCount, setSummarySentenceCount] = useState(6);
-  const [nlpSentiment, setNlpSentiment] = useState(true);
   const [nlpKeyPhrases, setNlpKeyPhrases] = useState(true);
   const [nlpEntities, setNlpEntities] = useState(true);
   const [nlpActionItems, setNlpActionItems] = useState(true);
   const [nlpSummary, setNlpSummary] = useState(true);
   const [nlpSegmentSentiment, setNlpSegmentSentiment] = useState(true);
+  const [sentimentThreshold, setSentimentThreshold] = useState(0.6);
   // Load existing jobs from backend on mount
   useEffect(() => {
     const loadJobs = async () => {
@@ -174,6 +178,11 @@ function App() {
     if (termsFile) formData.append('terms_file', termsFile);
     if (languageCandidates) formData.append('language_candidates', languageCandidates);
 
+    // Audio pre-processing settings
+    formData.append('audio_channels', audioChannels);
+    formData.append('audio_sample_rate', audioSampleRate);
+    formData.append('audio_bit_rate', audioBitRate);
+
     // Advanced settings
     if (method === 'azure') {
       formData.append('profanity_filter', profanityFilter);
@@ -187,13 +196,13 @@ function App() {
     if (enableNlp) {
       formData.append('summary_sentence_count', summarySentenceCount);
       const features = [];
-      if (nlpSentiment) features.push('sentiment');
       if (nlpKeyPhrases) features.push('key_phrases');
       if (nlpEntities) features.push('entities');
       if (nlpActionItems) features.push('action_items');
       if (nlpSummary) features.push('summary');
       if (nlpSegmentSentiment) features.push('segment_sentiment');
       formData.append('nlp_features', features.join(','));
+      if (nlpSegmentSentiment) formData.append('sentiment_confidence_threshold', sentimentThreshold);
     }
 
     try {
@@ -475,6 +484,57 @@ function App() {
               </small>
             </div>
 
+            {/* Audio Pre-processing Settings */}
+            <div className="settings-section preprocessing-settings">
+              <h4 className="settings-section-title">{t('upload.preprocessingSectionTitle', { defaultValue: '🔊 Audio Pre-processing' })}</h4>
+
+              <div className="form-group">
+                <label htmlFor="audioChannels">{t('upload.audioChannels', { defaultValue: 'Channels' })}<InfoTooltip text={t('tooltips.audioChannels', { defaultValue: 'Number of audio channels. Use 1 (mono) for best speech recognition results. Use 2 (stereo) only if your recording has separate speaker channels.' })} /></label>
+                <select
+                  id="audioChannels"
+                  value={audioChannels}
+                  onChange={(e) => setAudioChannels(parseInt(e.target.value))}
+                  className="select-input"
+                >
+                  <option value={1}>{t('upload.channelsMono', { defaultValue: '1 – Mono (recommended)' })}</option>
+                  <option value={2}>{t('upload.channelsStereo', { defaultValue: '2 – Stereo' })}</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="audioSampleRate">{t('upload.audioSampleRate', { defaultValue: 'Sample Rate' })}<InfoTooltip text={t('tooltips.audioSampleRate', { defaultValue: 'Audio sample rate in Hz. 16 kHz is optimal for speech recognition. Higher rates preserve more audio detail but increase processing time and file size.' })} /></label>
+                <select
+                  id="audioSampleRate"
+                  value={audioSampleRate}
+                  onChange={(e) => setAudioSampleRate(parseInt(e.target.value))}
+                  className="select-input"
+                >
+                  <option value={8000}>8,000 Hz (telephone quality)</option>
+                  <option value={16000}>16,000 Hz (recommended)</option>
+                  <option value={22050}>22,050 Hz</option>
+                  <option value={44100}>44,100 Hz (CD quality)</option>
+                  <option value={48000}>48,000 Hz (studio quality)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="audioBitRate">{t('upload.audioBitRate', { defaultValue: 'Bit Rate' })}<InfoTooltip text={t('tooltips.audioBitRate', { defaultValue: 'Audio encoding bit rate. Lower values reduce file size, higher values preserve quality. 16k is sufficient for speech; use higher for music or high-fidelity recordings.' })} /></label>
+                <select
+                  id="audioBitRate"
+                  value={audioBitRate}
+                  onChange={(e) => setAudioBitRate(e.target.value)}
+                  className="select-input"
+                >
+                  <option value="16k">16 kbps (speech optimised)</option>
+                  <option value="32k">32 kbps</option>
+                  <option value="64k">64 kbps</option>
+                  <option value="128k">128 kbps (high quality)</option>
+                  <option value="192k">192 kbps</option>
+                  <option value="256k">256 kbps (studio quality)</option>
+                </select>
+              </div>
+            </div>
+
             <div className="form-group checkbox-group">
               <label>
                 <input
@@ -521,15 +581,29 @@ function App() {
 
                 <div className="nlp-feature-toggles">
                   <label className="feature-toggle">
-                    <input type="checkbox" checked={nlpSentiment} onChange={(e) => setNlpSentiment(e.target.checked)} />
-                    <span className="toggle-label">{t('upload.nlpSentiment')}</span>
-                    <InfoTooltip text={t('tooltips.nlpSentiment')} />
-                  </label>
-                  <label className="feature-toggle">
                     <input type="checkbox" checked={nlpSegmentSentiment} onChange={(e) => setNlpSegmentSentiment(e.target.checked)} />
                     <span className="toggle-label">{t('upload.nlpSegmentSentiment')}</span>
                     <InfoTooltip text={t('tooltips.nlpSegmentSentiment')} />
                   </label>
+                  {nlpSegmentSentiment && (
+                    <div className="form-group sentiment-threshold-group">
+                      <label htmlFor="sentimentThreshold">{t('upload.sentimentThreshold', { defaultValue: 'Sentiment Confidence Threshold' })}<InfoTooltip text={t('tooltips.sentimentThreshold', { defaultValue: 'Minimum confidence score required to label a segment as positive or negative. Segments below this threshold are marked as neutral. Higher values = only strong sentiments shown.' })} /></label>
+                      <div className="range-with-value">
+                        <input
+                          id="sentimentThreshold"
+                          type="range"
+                          min="0.1"
+                          max="0.95"
+                          step="0.05"
+                          value={sentimentThreshold}
+                          onChange={(e) => setSentimentThreshold(parseFloat(e.target.value))}
+                          className="range-input"
+                        />
+                        <span className="range-value">{(sentimentThreshold * 100).toFixed(0)}%</span>
+                      </div>
+                      <small className="help-text">{t('upload.sentimentThresholdHelp', { defaultValue: 'Default: 60%. Higher = only strong emotions shown, lower = more sensitive.' })}</small>
+                    </div>
+                  )}
                   <label className="feature-toggle">
                     <input type="checkbox" checked={nlpKeyPhrases} onChange={(e) => setNlpKeyPhrases(e.target.checked)} />
                     <span className="toggle-label">{t('upload.nlpKeyPhrases')}</span>

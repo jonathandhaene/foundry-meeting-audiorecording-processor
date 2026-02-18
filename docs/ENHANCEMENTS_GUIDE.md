@@ -323,9 +323,35 @@ Exports transcription in specified format.
 Planned features for future releases:
 - User authentication and profile management
 - Analytics dashboard with usage statistics
-- Advanced audio preprocessing options
 - Offline mode with service worker
 - Multi-tenancy support for enterprise users
+
+---
+
+## Audio Pre-processing Settings
+
+Users can configure how uploaded audio is normalised before transcription:
+
+| Setting | Options | Default | Description |
+|---------|---------|---------|-------------|
+| Channels | 1 (Mono), 2 (Stereo) | 1 (Mono) | Mono is optimal for speech recognition |
+| Sample Rate | 8 kHz, 16 kHz, 22.05 kHz, 44.1 kHz, 48 kHz | 16 kHz | 16 kHz is the sweet spot for speech |
+| Bit Rate | 16k, 32k, 64k, 128k, 192k, 256k | 16k | Lower = smaller files, higher = more fidelity |
+
+These values are passed to FFmpeg during the normalisation step.
+
+---
+
+## Sentiment Confidence Threshold
+
+Per-segment sentiment analysis now supports an adjustable **confidence threshold** (0%–95%, default 60%).
+
+- Azure Text Analytics returns confidence scores for each sentiment label (positive, neutral, negative)
+- If the winning label's confidence is **below the threshold**, the segment is downgraded to "neutral"
+- **Higher threshold** → only strong sentiments appear → cleaner timeline
+- **Lower threshold** → more sensitive, picks up subtle tonal shifts
+
+The threshold slider appears in the UI when _Per-Segment Sentiment_ is enabled.
 
 ---
 

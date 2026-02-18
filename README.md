@@ -18,10 +18,11 @@ A comprehensive end-to-end solution for processing meeting audio files with mult
   - Automatic language detection from candidate list
   - Optimized for mixed-language content
 - **Audio Preprocessing**: Automatic normalization and noise reduction using FFmpeg
+  - Configurable channels (mono/stereo), sample rate, and bit rate
 - **Speaker Diarization**: Multi-speaker identification (Azure)
 - **Content Understanding**: Azure Text Analytics for:
   - Key phrase extraction
-  - Sentiment analysis
+  - Per-segment sentiment analysis with adjustable confidence threshold
   - Entity recognition
   - Action item detection
   - Topic identification

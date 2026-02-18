@@ -220,6 +220,11 @@ async def transcribe_audio(
     # --- Advanced: NLP settings ---
     summary_sentence_count: Optional[int] = Form(default=None),
     nlp_features: Optional[str] = Form(default=None),
+    sentiment_confidence_threshold: Optional[float] = Form(default=0.6, ge=0.0, le=1.0),
+    # --- Audio pre-processing settings ---
+    audio_channels: int = Form(default=1, ge=1, le=2),
+    audio_sample_rate: int = Form(default=16000),
+    audio_bit_rate: str = Form(default="16k"),
 ):
     """
     Upload an audio file and start transcription.
@@ -281,6 +286,10 @@ async def transcribe_audio(
         "whisper_prompt": whisper_prompt,
         "summary_sentence_count": summary_sentence_count,
         "nlp_features": nlp_features,
+        "sentiment_confidence_threshold": sentiment_confidence_threshold,
+        "audio_channels": audio_channels,
+        "audio_sample_rate": audio_sample_rate,
+        "audio_bit_rate": audio_bit_rate,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "result": None,
@@ -307,6 +316,10 @@ async def transcribe_audio(
         whisper_prompt=whisper_prompt,
         summary_sentence_count=summary_sentence_count,
         nlp_features=nlp_features,
+        sentiment_confidence_threshold=sentiment_confidence_threshold,
+        audio_channels=audio_channels,
+        audio_sample_rate=audio_sample_rate,
+        audio_bit_rate=audio_bit_rate,
     )
 
     return JobResponse(job_id=job_id, status=JobStatus.PENDING, message="Transcription job started")
@@ -397,6 +410,10 @@ def process_transcription(
     whisper_prompt: Optional[str] = None,
     summary_sentence_count: Optional[int] = None,
     nlp_features: Optional[str] = None,
+    sentiment_confidence_threshold: Optional[float] = 0.6,
+    audio_channels: int = 1,
+    audio_sample_rate: int = 16000,
+    audio_bit_rate: str = "16k",
 ):
     """
     Background task to process transcription.
@@ -458,7 +475,18 @@ def process_transcription(
         azure_config = config.get_azure_config()
         processing_config = config.get_processing_config()
 
-        preprocessor = AudioPreprocessor()
+        # Validate pre-processing settings
+        valid_sample_rates = {8000, 16000, 22050, 44100, 48000}
+        valid_bit_rates = {"16k", "32k", "64k", "128k", "192k", "256k"}
+        safe_channels = max(1, min(2, audio_channels))
+        safe_sample_rate = audio_sample_rate if audio_sample_rate in valid_sample_rates else 16000
+        safe_bit_rate = audio_bit_rate if audio_bit_rate in valid_bit_rates else "16k"
+
+        preprocessor = AudioPreprocessor(
+            sample_rate=safe_sample_rate,
+            channels=safe_channels,
+            bit_rate=safe_bit_rate,
+        )
         processed_path = preprocessor.normalize_audio(file_path)
 
         stages["preprocessing"] = _stage("done", "Audio ready", 100)
@@ -554,6 +582,8 @@ def process_transcription(
             nlp_opts["enable_action_items"] = "action_items" in features
             nlp_opts["enable_summary"] = "summary" in features
             nlp_opts["per_segment_sentiment"] = "segment_sentiment" in features
+        if sentiment_confidence_threshold is not None:
+            nlp_opts["sentiment_confidence_threshold"] = sentiment_confidence_threshold
 
         segments_dicts = None
         if transcription_result.segments:

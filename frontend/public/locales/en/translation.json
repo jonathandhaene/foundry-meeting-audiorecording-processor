@@ -43,12 +43,19 @@
     "initialPromptHelp": "Guide the transcription style. Include terms, acronyms, or context. Max ~224 tokens ({{count}}/800 characters).",
     "summaryLength": "Summary Length",
     "summaryLengthValue": "{{count}} sentences",
-    "nlpSentiment": "Sentiment Analysis",
     "nlpSegmentSentiment": "Per-Segment Sentiment",
+    "sentimentThreshold": "Sentiment Confidence Threshold",
+    "sentimentThresholdHelp": "Default: 60%. Higher = only strong emotions shown, lower = more sensitive.",
     "nlpKeyPhrases": "Key Phrases",
     "nlpEntities": "Entity Recognition",
     "nlpActionItems": "Action Items",
-    "nlpSummary": "Summary"
+    "nlpSummary": "Summary",
+    "preprocessingSectionTitle": "🔊 Audio Pre-processing",
+    "audioChannels": "Channels",
+    "channelsMono": "1 – Mono (recommended)",
+    "channelsStereo": "2 – Stereo",
+    "audioSampleRate": "Sample Rate",
+    "audioBitRate": "Bit Rate"
   },
   "tooltips": {
     "audioFile": "Choose an audio file from your computer (MP3, WAV, M4A, etc.). This is the recording you want to convert to text.",
@@ -65,12 +72,15 @@
     "enableDiarization": "Speaker diarization figures out \"who said what\" in your recording. It labels each part of the conversation with a speaker name. Essential for meetings with multiple participants.",
     "enableNlp": "Turns on smart text analysis after transcription. This extracts a summary, key phrases, sentiment (positive/negative tone), named entities, and action items from your meeting.",
     "summaryLength": "Controls how long the auto-generated summary will be. A higher number of sentences means a more detailed summary; lower means a brief overview.",
-    "nlpSentiment": "Analyses the overall emotional tone of the meeting — whether the conversation is positive, negative, or neutral.",
     "nlpSegmentSentiment": "Analyses the emotional tone of each individual speech segment, so you can see how sentiment changed throughout the meeting.",
+    "sentimentThreshold": "Minimum confidence score required to label a segment as positive or negative. Segments below this threshold are marked as neutral. Higher values mean only strong sentiments are shown; lower values make detection more sensitive.",
     "nlpKeyPhrases": "Automatically extracts the most important words and phrases from the transcription — great for a quick overview of what was discussed.",
     "nlpEntities": "Finds and labels people, organisations, locations, dates, and other named things mentioned in the meeting.",
     "nlpActionItems": "Detects commitments and to-dos mentioned during the meeting, like \"John will send the report by Friday\".",
-    "nlpSummary": "Generates a concise summary of the entire meeting, capturing the main points discussed."
+    "nlpSummary": "Generates a concise summary of the entire meeting, capturing the main points discussed.",
+    "audioChannels": "Number of audio channels. Use 1 (mono) for best speech recognition results. Use 2 (stereo) only if your recording has separate speaker channels.",
+    "audioSampleRate": "Audio sample rate in Hz. 16 kHz is optimal for speech recognition. Higher rates preserve more audio detail but increase processing time and file size.",
+    "audioBitRate": "Audio encoding bit rate. Lower values reduce file size, higher values preserve quality. 16k is sufficient for speech; use higher for music or high-fidelity recordings."
   },
   "methods": {
     "azure": "Azure AI Speech",

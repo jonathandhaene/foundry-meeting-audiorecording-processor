@@ -185,6 +185,7 @@ class ContentAnalyzer:
         summary_sentences = opts.get("summary_sentences", 6)
         max_key_phrases = opts.get("max_key_phrases", 20)
         per_segment_sentiment = opts.get("per_segment_sentiment", True)
+        sentiment_confidence_threshold = opts.get("sentiment_confidence_threshold", 0.6)
 
         logger.info("Analyzing transcription content (%d chars) – parallel mode", len(transcription_text))
 
@@ -207,9 +208,11 @@ class ContentAnalyzer:
                 pcb("sentiment", "running")
                 futures["sentiment"] = pool.submit(self._analyze_sentiment, chunks)
 
-            if enable_sentiment and per_segment_sentiment and segments:
+            if per_segment_sentiment and segments:
                 pcb("segment_sentiment", "running")
-                futures["segment_sentiment"] = pool.submit(self._analyze_segment_sentiments, segments)
+                futures["segment_sentiment"] = pool.submit(
+                    self._analyze_segment_sentiments, segments, sentiment_confidence_threshold
+                )
 
             if enable_entities:
                 pcb("entities", "running")
@@ -456,12 +459,17 @@ class ContentAnalyzer:
     # ------------------------------------------------------------------
     # Per-segment sentiment analysis (D365-style)
     # ------------------------------------------------------------------
-    def _analyze_segment_sentiments(self, segments: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _analyze_segment_sentiments(
+        self, segments: List[Dict[str, Any]], confidence_threshold: float = 0.6
+    ) -> List[Dict[str, Any]]:
         """
         Analyze sentiment for each transcription segment individually.
 
         Returns a list of dicts with start, end, speaker, sentiment label, and scores.
         Batches segments into groups of 10 (API limit) for efficiency.
+
+        A confidence_threshold is applied: if the winning sentiment's score is below
+        the threshold, the segment is labelled 'neutral' instead.
         """
         results: List[Dict[str, Any]] = []
         batch_size = 10
@@ -482,17 +490,26 @@ class ContentAnalyzer:
                 )
                 for (orig_idx, seg), doc in zip(batch, response):
                     if not doc.is_error:
+                        label = doc.sentiment
+                        scores = {
+                            "positive": round(doc.confidence_scores.positive, 3),
+                            "neutral": round(doc.confidence_scores.neutral, 3),
+                            "negative": round(doc.confidence_scores.negative, 3),
+                        }
+                        # Apply confidence threshold: if the winning
+                        # sentiment's score is below the threshold, label
+                        # the segment as neutral.
+                        if label in ("positive", "negative"):
+                            winning_score = scores.get(label, 0)
+                            if winning_score < confidence_threshold:
+                                label = "neutral"
                         results.append({
                             "index": orig_idx,
                             "start": seg.get("start", 0),
                             "end": seg.get("end", 0),
                             "speaker": seg.get("speaker", "Unknown"),
-                            "sentiment": doc.sentiment,
-                            "scores": {
-                                "positive": round(doc.confidence_scores.positive, 3),
-                                "neutral": round(doc.confidence_scores.neutral, 3),
-                                "negative": round(doc.confidence_scores.negative, 3),
-                            },
+                            "sentiment": label,
+                            "scores": scores,
                         })
                     else:
                         results.append({

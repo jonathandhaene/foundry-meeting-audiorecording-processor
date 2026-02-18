@@ -246,15 +246,30 @@ ContentAnalyzer(
 ```python
 analyze_transcription(
     transcription_text: str,
-    extract_action_items: bool = True
+    extract_action_items: bool = True,
+    segments: Optional[List[Dict]] = None,
+    nlp_options: Optional[Dict[str, Any]] = None,
+    progress_callback: Optional[Callable] = None
 ) -> MeetingSummary
 ```
 
-Analyze transcription text to extract insights.
+Analyze transcription text to extract insights. NLP sub-tasks run in parallel.
 
 **Parameters:**
 - `transcription_text`: Full text of the transcription
 - `extract_action_items`: Whether to extract action items
+- `segments`: List of transcription segments (for per-segment sentiment)
+- `nlp_options`: Dict controlling which NLP features run and their settings:
+  - `enable_sentiment` (bool): Enable overall sentiment analysis (default: True)
+  - `enable_key_phrases` (bool): Enable key phrase extraction (default: True)
+  - `enable_entities` (bool): Enable entity recognition (default: True)
+  - `enable_action_items` (bool): Enable action-item detection (default: True)
+  - `enable_summary` (bool): Enable extractive summary (default: True)
+  - `per_segment_sentiment` (bool): Enable per-segment sentiment (default: True)
+  - `sentiment_confidence_threshold` (float, 0.0–1.0): Minimum confidence score to label a segment as positive/negative; below this → neutral (default: 0.6)
+  - `summary_sentences` (int): Number of sentences in summary (default: 6)
+  - `max_key_phrases` (int): Maximum key phrases to return (default: 20)
+- `progress_callback`: Optional `(task_name, status)` callback for pipeline progress
 
 **Returns:** `MeetingSummary` object
 
@@ -383,9 +398,11 @@ class ProcessingConfig:
     default_language: str = "en-US"
     enable_diarization: bool = True
     max_speakers: int = 10
-    sample_rate: int = 16000
-    channels: int = 1
+    sample_rate: int = 16000        # 8000, 16000, 22050, 44100, 48000
+    channels: int = 1               # 1 (mono) or 2 (stereo)
+    bit_rate: str = "16k"           # 16k, 32k, 64k, 128k, 192k, 256k
     apply_noise_reduction: bool = True
+    sentiment_confidence_threshold: float = 0.6  # 0.0–1.0
 ```
 
 ---
