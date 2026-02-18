@@ -266,14 +266,20 @@ class TestProcessTranscription:
 
     @patch("meeting_processor.api.app.ConfigManager")
     @patch("meeting_processor.api.app.AudioPreprocessor")
-    def test_process_transcription_failure(self, mock_preprocessor_class, mock_config_class):
+    @patch("meeting_processor.transcription.transcriber.DefaultAzureCredential")
+    def test_process_transcription_failure(self, mock_credential, mock_preprocessor_class, mock_config_class):
         """Test transcription processing with error."""
         from meeting_processor.api.app import process_transcription
+
+        # Mock DefaultAzureCredential to prevent authentication errors in tests
+        mock_token = Mock()
+        mock_token.token = "mock_token"
+        mock_credential.return_value.get_token.return_value = mock_token
 
         # Setup mocks to raise exception
         mock_config_class.return_value = Mock()
         mock_preprocessor = Mock()
-        mock_preprocessor.preprocess_audio.side_effect = Exception("Processing error")
+        mock_preprocessor.normalize_audio.side_effect = Exception("Processing error")
         mock_preprocessor_class.return_value = mock_preprocessor
 
         # Create job
