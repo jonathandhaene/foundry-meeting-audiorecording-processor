@@ -480,6 +480,13 @@ Weekly security scans using:
   - Configure via environment variable: `export API_HOST=0.0.0.0`
 - `API_PORT`: Server port (default: `8000`)
 
+### Storage
+
+- `TRANSCRIPTION_DIR`: Directory for storing transcription jobs and audio files
+  - **Local development**: Default is `./meeting_transcription` (relative to project root)
+  - **Production deployments**: Set to `/home/meeting_transcription` for Azure App Service or other cloud platforms with persistent storage
+  - Configure via environment variable: `export TRANSCRIPTION_DIR=/path/to/storage`
+
 ### Audio Processing
 
 - `AUDIO_SAMPLE_RATE`: Target sample rate (default: 16000 Hz)
