@@ -2,8 +2,15 @@
 
 import pytest
 import sys
+import os
+import tempfile
 from pathlib import Path
 from unittest.mock import Mock
+
+# Set up temporary transcription directory for tests BEFORE any modules are imported
+if 'TRANSCRIPTION_DIR' not in os.environ:
+    test_temp_dir = tempfile.mkdtemp()
+    os.environ['TRANSCRIPTION_DIR'] = test_temp_dir
 
 # Add src to path for imports
 src_path = Path(__file__).parent.parent / "src"
@@ -39,3 +46,10 @@ def mock_external_modules():
         sys.modules["openai"] = mock_openai
 
     yield
+
+    # Cleanup temporary directory after all tests
+    import shutil
+    if 'TRANSCRIPTION_DIR' in os.environ:
+        temp_dir = os.environ['TRANSCRIPTION_DIR']
+        if temp_dir and Path(temp_dir).exists():
+            shutil.rmtree(temp_dir, ignore_errors=True)

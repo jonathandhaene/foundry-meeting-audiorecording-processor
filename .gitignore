@@ -61,6 +61,7 @@ tmp/
 temp/
 *.tmp
 *.log
+meeting_transcription/
 
 # Audio files
 *.wav
