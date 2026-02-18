@@ -10,12 +10,16 @@ from dotenv import load_dotenv
 class AzureConfig:
     """Azure service configuration."""
 
-    speech_key: str
-    speech_region: str
-    text_analytics_key: str
-    text_analytics_endpoint: str
+    speech_key: Optional[str] = None
+    speech_region: str = "eastus"
+    speech_resource_id: Optional[str] = None
+    speech_endpoint: Optional[str] = None
+    text_analytics_key: Optional[str] = None
+    text_analytics_endpoint: str = ""
     storage_connection_string: Optional[str] = None
     storage_container_name: Optional[str] = None
+    openai_endpoint: Optional[str] = None
+    openai_whisper_deployment: Optional[str] = None
 
 
 @dataclass
@@ -48,12 +52,16 @@ class ConfigManager:
     def get_azure_config(self) -> AzureConfig:
         """Get Azure service configuration."""
         return AzureConfig(
-            speech_key=self._get_required_env("AZURE_SPEECH_KEY"),
-            speech_region=self._get_required_env("AZURE_SPEECH_REGION"),
-            text_analytics_key=self._get_required_env("AZURE_TEXT_ANALYTICS_KEY"),
-            text_analytics_endpoint=self._get_required_env("AZURE_TEXT_ANALYTICS_ENDPOINT"),
+            speech_key=os.getenv("AZURE_SPEECH_KEY"),
+            speech_region=os.getenv("AZURE_SPEECH_REGION", "eastus"),
+            speech_resource_id=os.getenv("AZURE_SPEECH_RESOURCE_ID"),
+            speech_endpoint=os.getenv("AZURE_SPEECH_ENDPOINT"),
+            text_analytics_key=os.getenv("AZURE_TEXT_ANALYTICS_KEY"),
+            text_analytics_endpoint=os.getenv("AZURE_TEXT_ANALYTICS_ENDPOINT", ""),
             storage_connection_string=os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
             storage_container_name=os.getenv("AZURE_STORAGE_CONTAINER_NAME", "meeting-audio-files"),
+            openai_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+            openai_whisper_deployment=os.getenv("AZURE_OPENAI_WHISPER_DEPLOYMENT", "whisper"),
         )
 
     def get_processing_config(self) -> ProcessingConfig:

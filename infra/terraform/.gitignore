@@ -1,0 +1,9 @@
+# Ignore actual tfvars (may contain secrets) and Terraform state
+*.tfvars
+!terraform.tfvars.example
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+infra/terraform/.terraform.tfstate.lock.info
+tfplan

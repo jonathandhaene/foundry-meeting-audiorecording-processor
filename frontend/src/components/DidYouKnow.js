@@ -91,6 +91,12 @@ function DidYouKnow() {
       
       <div className={`did-you-know ${showFact ? 'show' : ''}`}>
         <div className="did-you-know-content">
+          <span className="did-you-know-title">
+            💡 {t('didYouKnow.title', { defaultValue: 'Did You Know?' })}
+          </span>
+          <span className="did-you-know-text">
+            {t(`didYouKnow.${currentFact.key}`, { defaultValue: currentFact.default })}
+          </span>
           <button
             className="close-button"
             onClick={handleClose}
@@ -98,12 +104,6 @@ function DidYouKnow() {
           >
             ×
           </button>
-          <h3 className="did-you-know-title">
-            💡 {t('didYouKnow.title', { defaultValue: 'Did You Know?' })}
-          </h3>
-          <p className="did-you-know-text">
-            {t(`didYouKnow.${currentFact.key}`, { defaultValue: currentFact.default })}
-          </p>
         </div>
       </div>
     </>

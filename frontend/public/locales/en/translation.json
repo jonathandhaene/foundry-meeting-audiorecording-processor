@@ -25,12 +25,56 @@
     "enableNlp": "Enable NLP Analysis (key phrases, sentiment, etc.)",
     "uploadButton": "Transcribe",
     "uploadingButton": "Uploading...",
-    "formLabel": "Transcription configuration form"
+    "formLabel": "Transcription configuration form",
+    "azureSectionTitle": "🎙 Azure AI Speech Settings",
+    "whisperSectionTitle": "🤖 Azure Whisper Settings",
+    "nlpSectionTitle": "📊 NLP Analysis Settings",
+    "profanityFilter": "Profanity Filter",
+    "profanityMasked": "Masked (****)",
+    "profanityRemoved": "Removed",
+    "profanityRaw": "Raw (no filter)",
+    "maxSpeakers": "Max Speakers",
+    "maxSpeakersHelp": "Maximum number of speakers to detect (1-36)",
+    "wordLevelTimestamps": "Enable word-level timestamps",
+    "temperature": "Temperature",
+    "temperatureHelp": "0 = deterministic, higher = more creative. Lower values recommended for transcription.",
+    "initialPrompt": "Initial Prompt",
+    "initialPromptPlaceholder": "Optional text to guide the model's style or continue a previous segment...",
+    "initialPromptHelp": "Guide the transcription style. Include terms, acronyms, or context. Max ~224 tokens ({{count}}/800 characters).",
+    "summaryLength": "Summary Length",
+    "summaryLengthValue": "{{count}} sentences",
+    "nlpSentiment": "Sentiment Analysis",
+    "nlpSegmentSentiment": "Per-Segment Sentiment",
+    "nlpKeyPhrases": "Key Phrases",
+    "nlpEntities": "Entity Recognition",
+    "nlpActionItems": "Action Items",
+    "nlpSummary": "Summary"
+  },
+  "tooltips": {
+    "audioFile": "Choose an audio file from your computer (MP3, WAV, M4A, etc.). This is the recording you want to convert to text.",
+    "method": "Pick how your audio gets converted to text. Azure AI Speech is best for multi-speaker meetings. Azure Whisper is great for general-purpose transcription.",
+    "languageCandidates": "If your meeting has people speaking multiple languages, list the possible language codes here (e.g. en-US,nl-NL). The system will detect which language is being spoken in each part.",
+    "profanityFilter": "Choose how swear words are handled: Masked replaces them with ****, Removed deletes them entirely, Raw keeps them as-is.",
+    "maxSpeakers": "Set the maximum number of distinct speakers you expect in the recording. A higher number won't hurt accuracy but helps the system prepare for larger meetings.",
+    "wordLevelTimestamps": "When enabled, each individual word gets its own timestamp — useful if you need precise timing for captions or subtitles.",
+    "temperature": "Controls randomness in the transcription. Keep it at 0 for the most accurate results. Higher values may produce varied but less reliable output.",
+    "initialPrompt": "Give the AI context about your audio — names of people, technical terms, or the topic being discussed. This helps it transcribe unfamiliar words correctly.",
+    "language": "Specify the language spoken in the recording (e.g. en-US for American English). Leave empty to let the system detect it automatically.",
+    "customTerms": "List specialised words, acronyms, or names that the AI might not recognise — like product names, project codes, or technical jargon. One per line or comma-separated.",
+    "termsFile": "Instead of typing custom terms one by one, upload a text file (.txt or .csv) containing your vocabulary list — one term per line.",
+    "enableDiarization": "Speaker diarization figures out \"who said what\" in your recording. It labels each part of the conversation with a speaker name. Essential for meetings with multiple participants.",
+    "enableNlp": "Turns on smart text analysis after transcription. This extracts a summary, key phrases, sentiment (positive/negative tone), named entities, and action items from your meeting.",
+    "summaryLength": "Controls how long the auto-generated summary will be. A higher number of sentences means a more detailed summary; lower means a brief overview.",
+    "nlpSentiment": "Analyses the overall emotional tone of the meeting — whether the conversation is positive, negative, or neutral.",
+    "nlpSegmentSentiment": "Analyses the emotional tone of each individual speech segment, so you can see how sentiment changed throughout the meeting.",
+    "nlpKeyPhrases": "Automatically extracts the most important words and phrases from the transcription — great for a quick overview of what was discussed.",
+    "nlpEntities": "Finds and labels people, organisations, locations, dates, and other named things mentioned in the meeting.",
+    "nlpActionItems": "Detects commitments and to-dos mentioned during the meeting, like \"John will send the report by Friday\".",
+    "nlpSummary": "Generates a concise summary of the entire meeting, capturing the main points discussed."
   },
   "methods": {
-    "azure": "Azure Speech Services",
-    "whisper_local": "Whisper (Local)",
-    "whisper_api": "Whisper (OpenAI API)"
+    "azure": "Azure AI Speech",
+    "whisper_api": "Azure OpenAI Whisper"
   },
   "whisperModels": {
     "tiny": "Tiny (fastest, least accurate)",
@@ -68,9 +112,15 @@
       "more": "... and {{count}} more segments"
     },
     "nlp": {
-      "title": "NLP Analysis:",
-      "keyPhrases": "Key Phrases:",
-      "sentiment": "Sentiment:"
+      "title": "NLP Analysis",
+      "summary": "Summary",
+      "actionItems": "Action Items",
+      "keyPhrases": "Key Phrases",
+      "topics": "Topics",
+      "sentiment": "Sentiment",
+      "entities": "Entities",
+      "noActionItems": "No action items detected",
+      "noKeyPhrases": "No key phrases detected"
     }
   },
   "errors": {

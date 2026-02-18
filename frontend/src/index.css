@@ -22,6 +22,21 @@
   --warning-color: #f39c12;
   --info-color: #3498db;
   --segment-bg: #f9f9f9;
+  /* Audio player */
+  --player-bg: linear-gradient(135deg, #e8eaf6 0%, #f5f5f5 100%);
+  --player-text: #333333;
+  --player-text-muted: #777777;
+  --player-btn-color: #555555;
+  --player-btn-hover-bg: rgba(0,0,0,0.06);
+  --player-track-bg: rgba(0,0,0,0.08);
+  --player-lane-bg: rgba(0,0,0,0.04);
+  --player-playhead-bg: #333333;
+  --player-playhead-shadow: rgba(0,0,0,0.3);
+  --player-timeline-line: rgba(0,0,0,0.6);
+  --player-hint-color: #888888;
+  --player-speed-bg: rgba(0,0,0,0.05);
+  --player-speed-hover-bg: rgba(0,0,0,0.1);
+  --player-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 :root[data-theme="dark"] {
@@ -47,6 +62,21 @@
   --warning-color: #e67e22;
   --info-color: #2980b9;
   --segment-bg: #0f3460;
+  /* Audio player */
+  --player-bg: linear-gradient(135deg, #1a1d2e 0%, #252a3a 100%);
+  --player-text: #e0e0e0;
+  --player-text-muted: #a0a8c0;
+  --player-btn-color: #c0c6d8;
+  --player-btn-hover-bg: rgba(255,255,255,0.08);
+  --player-track-bg: rgba(255,255,255,0.1);
+  --player-lane-bg: rgba(255,255,255,0.04);
+  --player-playhead-bg: #ffffff;
+  --player-playhead-shadow: rgba(0,0,0,0.4);
+  --player-timeline-line: rgba(255,255,255,0.8);
+  --player-hint-color: #5a6180;
+  --player-speed-bg: rgba(255,255,255,0.06);
+  --player-speed-hover-bg: rgba(255,255,255,0.14);
+  --player-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 :root[data-theme="ocean"] {
@@ -72,6 +102,21 @@
   --warning-color: #ffb74d;
   --info-color: #4fc3f7;
   --segment-bg: #f0f9fb;
+  /* Audio player */
+  --player-bg: linear-gradient(135deg, #d0ecf3 0%, #e8f6fa 100%);
+  --player-text: #0d3b4f;
+  --player-text-muted: #5a8ea0;
+  --player-btn-color: #1a5971;
+  --player-btn-hover-bg: rgba(0,172,193,0.1);
+  --player-track-bg: rgba(0,100,120,0.1);
+  --player-lane-bg: rgba(0,100,120,0.05);
+  --player-playhead-bg: #0d3b4f;
+  --player-playhead-shadow: rgba(0,0,0,0.25);
+  --player-timeline-line: rgba(0,60,80,0.7);
+  --player-hint-color: #6b9eb0;
+  --player-speed-bg: rgba(0,100,120,0.06);
+  --player-speed-hover-bg: rgba(0,100,120,0.12);
+  --player-shadow: 0 4px 16px rgba(13, 59, 79, 0.1);
 }
 
 :root[data-theme="forest"] {
@@ -97,6 +142,21 @@
   --warning-color: #ffb74d;
   --info-color: #4fc3f7;
   --segment-bg: #f1f8f4;
+  /* Audio player */
+  --player-bg: linear-gradient(135deg, #dcedc8 0%, #f1f8e9 100%);
+  --player-text: #1b5e20;
+  --player-text-muted: #558b2f;
+  --player-btn-color: #2e7d32;
+  --player-btn-hover-bg: rgba(67,160,71,0.1);
+  --player-track-bg: rgba(27,94,32,0.1);
+  --player-lane-bg: rgba(27,94,32,0.05);
+  --player-playhead-bg: #1b5e20;
+  --player-playhead-shadow: rgba(0,0,0,0.25);
+  --player-timeline-line: rgba(27,94,32,0.7);
+  --player-hint-color: #66bb6a;
+  --player-speed-bg: rgba(27,94,32,0.06);
+  --player-speed-hover-bg: rgba(27,94,32,0.12);
+  --player-shadow: 0 4px 16px rgba(27, 94, 32, 0.1);
 }
 
 :root[data-theme="sunset"] {
@@ -122,6 +182,21 @@
   --warning-color: #ffa726;
   --info-color: #42a5f5;
   --segment-bg: #fff8f0;
+  /* Audio player */
+  --player-bg: linear-gradient(135deg, #ffe0b2 0%, #fff3e0 100%);
+  --player-text: #bf360c;
+  --player-text-muted: #e65100;
+  --player-btn-color: #d84315;
+  --player-btn-hover-bg: rgba(255,111,0,0.1);
+  --player-track-bg: rgba(191,54,12,0.1);
+  --player-lane-bg: rgba(191,54,12,0.05);
+  --player-playhead-bg: #bf360c;
+  --player-playhead-shadow: rgba(0,0,0,0.25);
+  --player-timeline-line: rgba(191,54,12,0.7);
+  --player-hint-color: #ff8a65;
+  --player-speed-bg: rgba(191,54,12,0.06);
+  --player-speed-hover-bg: rgba(191,54,12,0.12);
+  --player-shadow: 0 4px 16px rgba(191, 54, 12, 0.1);
 }
 
 body {

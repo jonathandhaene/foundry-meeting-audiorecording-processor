@@ -1,0 +1,133 @@
+.info-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.info-tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-secondary, #6b7280);
+  background: transparent;
+  color: var(--text-secondary, #6b7280);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: help;
+  padding: 0;
+  line-height: 1;
+  transition: all 0.2s ease;
+  font-style: italic;
+  font-family: Georgia, 'Times New Roman', serif;
+  flex-shrink: 0;
+}
+
+.info-tooltip-trigger:hover,
+.info-tooltip-trigger:focus {
+  border-color: var(--primary-color, #2563eb);
+  color: var(--primary-color, #2563eb);
+  background: var(--hover-bg, rgba(37, 99, 235, 0.08));
+  outline: none;
+  transform: scale(1.1);
+}
+
+.info-tooltip-content {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--tooltip-bg, #1e293b);
+  color: var(--tooltip-text, #e2e8f0);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  width: 300px;
+  max-width: 90vw;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  z-index: 1000;
+  pointer-events: none;
+  white-space: normal;
+  text-align: left;
+  font-weight: 400;
+  font-style: normal;
+  animation: tooltipFadeIn 0.15s ease-out;
+}
+
+.info-tooltip-top {
+  bottom: calc(100% + 10px);
+}
+
+.info-tooltip-bottom {
+  top: calc(100% + 10px);
+}
+
+.info-tooltip-top::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--tooltip-bg, #1e293b);
+}
+
+.info-tooltip-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: var(--tooltip-bg, #1e293b);
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Theme-specific tooltip colors */
+[data-theme="light"] .info-tooltip-content {
+  --tooltip-bg: #1e293b;
+  --tooltip-text: #f1f5f9;
+}
+
+[data-theme="dark"] .info-tooltip-content {
+  --tooltip-bg: #334155;
+  --tooltip-text: #f1f5f9;
+}
+
+[data-theme="ocean"] .info-tooltip-content {
+  --tooltip-bg: #1e3a5f;
+  --tooltip-text: #e0f2fe;
+}
+
+[data-theme="forest"] .info-tooltip-content {
+  --tooltip-bg: #1a3329;
+  --tooltip-text: #d1fae5;
+}
+
+[data-theme="sunset"] .info-tooltip-content {
+  --tooltip-bg: #451a03;
+  --tooltip-text: #fef3c7;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .info-tooltip-content {
+    width: 240px;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+}

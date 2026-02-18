@@ -1,19 +1,28 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (including libs required by Azure Speech SDK)
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    libssl3 \
+    ca-certificates \
+    libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
+# Azure Speech SDK on Debian 12+ needs OpenSSL 1.x compat
+# Use the SDK's bundled SSL by setting this env var
+ENV SPEECHSDK_ROOT=/app/.speech-sdk
+ENV SSL_CERT_DIR=/etc/ssl/certs
+
 # Copy requirements and install Python dependencies
-COPY requirements.txt .
+COPY requirements-azure.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY src/ ./src/
 COPY setup.py .
+COPY README.md .
 
 # Install the package
 RUN pip install -e .

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { ToastContainer, toast } from 'react-toastify';
@@ -7,6 +7,7 @@ import './App.css';
 import './accessibility.css';
 import LanguageSelector from './LanguageSelector';
 import ProgressBar from './components/ProgressBar';
+import PipelineProgress from './components/PipelineProgress';
 import TranscriptSearch from './components/TranscriptSearch';
 import AudioPlayer from './components/AudioPlayer';
 import ExportButton from './components/ExportButton';
@@ -15,6 +16,7 @@ import ThemeSelector from './components/ThemeSelector';
 import DidYouKnow from './components/DidYouKnow';
 import BadgeSystem from './components/BadgeSystem';
 import SpeakerAvatar from './components/SpeakerAvatar';
+import InfoTooltip from './components/InfoTooltip';
 
 function App() {
   const { t } = useTranslation();
@@ -30,14 +32,68 @@ function App() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Jobs sorted by creation date DESC (newest first)
+  const sortedJobs = useMemo(() => {
+    return [...jobs].sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return dateB - dateA;
+    });
+  }, [jobs]);
+
+  // Advanced settings state
+  // Azure Speech advanced
+  const [profanityFilter, setProfanityFilter] = useState('masked');
+  const [maxSpeakers, setMaxSpeakers] = useState(10);
+  const [wordLevelTimestamps, setWordLevelTimestamps] = useState(false);
+  // Whisper advanced
+  const [whisperTemperature, setWhisperTemperature] = useState(0);
+  const [whisperPrompt, setWhisperPrompt] = useState('');
+  // NLP advanced
+  const [summarySentenceCount, setSummarySentenceCount] = useState(6);
+  const [nlpSentiment, setNlpSentiment] = useState(true);
+  const [nlpKeyPhrases, setNlpKeyPhrases] = useState(true);
+  const [nlpEntities, setNlpEntities] = useState(true);
+  const [nlpActionItems, setNlpActionItems] = useState(true);
+  const [nlpSummary, setNlpSummary] = useState(true);
+  const [nlpSegmentSentiment, setNlpSegmentSentiment] = useState(true);
+  // Load existing jobs from backend on mount
+  useEffect(() => {
+    const loadJobs = async () => {
+      try {
+        const response = await axios.get('/api/jobs');
+        if (response.data?.jobs?.length > 0) {
+          // Fetch full details for each job
+          const fullJobs = await Promise.all(
+            response.data.jobs.map(async (j) => {
+              try {
+                const detail = await axios.get(`/api/jobs/${j.job_id}`);
+                return { ...j, ...detail.data };
+              } catch {
+                return j;
+              }
+            })
+          );
+          setJobs(fullJobs);
+        }
+      } catch (err) {
+        console.error('Failed to load existing jobs:', err);
+      }
+    };
+    loadJobs();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateJobs = useCallback(async () => {
     const updatedJobs = await Promise.all(
       jobs.map(async (job) => {
+        // Skip uploading jobs – they don't exist on the server yet
+        if (job.status === 'uploading') return job;
         if (job.status === 'pending' || job.status === 'processing') {
           try {
             const response = await axios.get(`/api/jobs/${job.job_id}`);
-            const updatedJob = response.data;
+            const updatedJob = { ...job, ...response.data };
             
             // Notify user when job completes
             if (updatedJob.status === 'completed' && job.status !== 'completed') {
@@ -93,6 +149,19 @@ function App() {
 
     setLoading(true);
     setError('');
+    setUploadProgress(0);
+
+    // Create an immediate "uploading" job for instant UI feedback
+    const tempId = `uploading-${Date.now()}`;
+    const uploadingJob = {
+      job_id: tempId,
+      status: 'uploading',
+      filename: file.name,
+      method: method,
+      created_at: new Date().toISOString(),
+      uploadProgress: 0,
+    };
+    setJobs(prev => [uploadingJob, ...prev]);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -105,13 +174,44 @@ function App() {
     if (termsFile) formData.append('terms_file', termsFile);
     if (languageCandidates) formData.append('language_candidates', languageCandidates);
 
+    // Advanced settings
+    if (method === 'azure') {
+      formData.append('profanity_filter', profanityFilter);
+      formData.append('max_speakers', maxSpeakers);
+      formData.append('word_level_timestamps', wordLevelTimestamps);
+    }
+    if (method === 'whisper_api') {
+      if (whisperTemperature > 0) formData.append('whisper_temperature', whisperTemperature);
+      if (whisperPrompt) formData.append('whisper_prompt', whisperPrompt);
+    }
+    if (enableNlp) {
+      formData.append('summary_sentence_count', summarySentenceCount);
+      const features = [];
+      if (nlpSentiment) features.push('sentiment');
+      if (nlpKeyPhrases) features.push('key_phrases');
+      if (nlpEntities) features.push('entities');
+      if (nlpActionItems) features.push('action_items');
+      if (nlpSummary) features.push('summary');
+      if (nlpSegmentSentiment) features.push('segment_sentiment');
+      formData.append('nlp_features', features.join(','));
+    }
+
     try {
       const response = await axios.post('/api/transcribe', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress: (progressEvent) => {
+          const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(pct);
+          // Update the uploading job's progress
+          setJobs(prev => prev.map(j =>
+            j.job_id === tempId ? { ...j, uploadProgress: pct } : j
+          ));
+        },
       });
 
+      // Replace the uploading placeholder with the real job
       const newJob = {
         job_id: response.data.job_id,
         status: response.data.status,
@@ -120,11 +220,12 @@ function App() {
         created_at: new Date().toISOString(),
       };
 
-      setJobs([newJob, ...jobs]);
+      setJobs(prev => prev.map(j => j.job_id === tempId ? newJob : j));
       setFile(null);
       setTermsFile(null);
       setCustomTerms('');
       setLanguageCandidates('');
+      setUploadProgress(0);
       document.getElementById('fileInput').value = '';
       if (document.getElementById('termsFileInput')) {
         document.getElementById('termsFileInput').value = '';
@@ -135,11 +236,14 @@ function App() {
         defaultValue: 'Transcription started',
       }));
     } catch (error) {
+      // Remove the uploading placeholder on error
+      setJobs(prev => prev.filter(j => j.job_id !== tempId));
       const errorMsg = error.response?.data?.detail || t('errors.uploadFailed');
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -164,12 +268,6 @@ function App() {
       {/* Theme Selector */}
       <ThemeSelector />
       
-      {/* Badge System */}
-      <BadgeSystem jobs={jobs} />
-      
-      {/* Did You Know Easter Egg */}
-      <DidYouKnow />
-      
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -185,6 +283,7 @@ function App() {
       />
       <header className="App-header" role="banner">
         <div className="header-content">
+          <BadgeSystem jobs={jobs} />
           <div className="header-text">
             <h1>{t('app.title')}</h1>
             <p>{t('app.subtitle')}</p>
@@ -193,12 +292,15 @@ function App() {
         </div>
       </header>
 
+      {/* Subtle tip bar */}
+      <DidYouKnow />
+
       <main id="main-content" className="container" role="main">
         <section className="upload-section" aria-labelledby="upload-heading">
           <h2 id="upload-heading">{t('upload.title')}</h2>
           <form onSubmit={handleSubmit} aria-label={t('upload.formLabel', { defaultValue: 'Transcription configuration form' })}>
             <div className="form-group">
-              <label htmlFor="fileInput">{t('upload.audioFile')}</label>
+              <label htmlFor="fileInput">{t('upload.audioFile')}<InfoTooltip text={t('tooltips.audioFile')} /></label>
               <input
                 id="fileInput"
                 type="file"
@@ -212,7 +314,7 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="method">{t('upload.method')}</label>
+              <label htmlFor="method">{t('upload.method')}<InfoTooltip text={t('tooltips.method')} /></label>
               <select
                 id="method"
                 value={method}
@@ -220,31 +322,119 @@ function App() {
                 className="select-input"
               >
                 <option value="azure">{t('methods.azure')}</option>
-                <option value="whisper_local">{t('methods.whisper_local')}</option>
-                <option value="whisper_api">{t('methods.whisper_api')}</option>
+                <option value="whisper_api">{t('methods.whisper_api', { defaultValue: 'Azure Whisper' })}</option>
               </select>
             </div>
 
-            {method === 'whisper_local' && (
-              <div className="form-group">
-                <label htmlFor="whisperModel">{t('upload.whisperModel')}</label>
-                <select
-                  id="whisperModel"
-                  value={whisperModel}
-                  onChange={(e) => setWhisperModel(e.target.value)}
-                  className="select-input"
-                >
-                  <option value="tiny">{t('whisperModels.tiny')}</option>
-                  <option value="base">{t('whisperModels.base')}</option>
-                  <option value="small">{t('whisperModels.small')}</option>
-                  <option value="medium">{t('whisperModels.medium')}</option>
-                  <option value="large">{t('whisperModels.large')}</option>
-                </select>
-              </div>
-            )}
+            {/* Method-specific settings inline */}
+            <div className="settings-section method-settings">
+              <h4 className="settings-section-title">
+                {method === 'azure' ? t('upload.azureSectionTitle') : t('upload.whisperSectionTitle')}
+              </h4>
+
+              {method === 'azure' && (
+                <>
+                  <div className="form-group">
+                    <label htmlFor="languageCandidates">{t('upload.languageCandidates')}<InfoTooltip text={t('tooltips.languageCandidates')} /></label>
+                    <input
+                      id="languageCandidates"
+                      type="text"
+                      value={languageCandidates}
+                      onChange={(e) => setLanguageCandidates(e.target.value)}
+                      placeholder={t('upload.languageCandidatesPlaceholder')}
+                      className="text-input"
+                    />
+                    <small className="help-text">
+                      {t('upload.languageCandidatesHelp')}
+                    </small>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="profanityFilter">{t('upload.profanityFilter')}<InfoTooltip text={t('tooltips.profanityFilter')} /></label>
+                    <select
+                      id="profanityFilter"
+                      value={profanityFilter}
+                      onChange={(e) => setProfanityFilter(e.target.value)}
+                      className="select-input"
+                    >
+                      <option value="masked">{t('upload.profanityMasked')}</option>
+                      <option value="removed">{t('upload.profanityRemoved')}</option>
+                      <option value="raw">{t('upload.profanityRaw')}</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="maxSpeakers">{t('upload.maxSpeakers')}<InfoTooltip text={t('tooltips.maxSpeakers')} /></label>
+                    <input
+                      id="maxSpeakers"
+                      type="number"
+                      min="1"
+                      max="36"
+                      value={maxSpeakers}
+                      onChange={(e) => setMaxSpeakers(parseInt(e.target.value) || 10)}
+                      className="text-input number-input"
+                    />
+                    <small className="help-text">{t('upload.maxSpeakersHelp')}</small>
+                  </div>
+
+                  <div className="form-group checkbox-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={wordLevelTimestamps}
+                        onChange={(e) => setWordLevelTimestamps(e.target.checked)}
+                      />
+                      {t('upload.wordLevelTimestamps')}<InfoTooltip text={t('tooltips.wordLevelTimestamps')} />
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {method === 'whisper_api' && (
+                <>
+                  <div className="form-group">
+                    <label htmlFor="whisperTemperature">{t('upload.temperature')}<InfoTooltip text={t('tooltips.temperature')} /></label>
+                    <div className="range-with-value">
+                      <input
+                        id="whisperTemperature"
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={whisperTemperature}
+                        onChange={(e) => setWhisperTemperature(parseFloat(e.target.value))}
+                        className="range-input"
+                      />
+                      <span className="range-value">{whisperTemperature.toFixed(1)}</span>
+                    </div>
+                    <small className="help-text">
+                      {t('upload.temperatureHelp')}
+                    </small>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="whisperPrompt">{t('upload.initialPrompt')}<InfoTooltip text={t('tooltips.initialPrompt')} /></label>
+                    <textarea
+                      id="whisperPrompt"
+                      value={whisperPrompt}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 800) setWhisperPrompt(e.target.value);
+                      }}
+                      placeholder={t('upload.initialPromptPlaceholder')}
+                      className={`text-input${whisperPrompt.length >= 800 ? ' input-limit-reached' : ''}`}
+                      rows="3"
+                      maxLength={800}
+                    />
+                    <small className="help-text">
+                      {t('upload.initialPromptHelp', { count: whisperPrompt.length })}
+                    </small>
+                  </div>
+                </>
+              )}
+            </div>
 
             <div className="form-group">
-              <label htmlFor="language">{t('upload.language')}</label>
+              <label htmlFor="language">{t('upload.language')}<InfoTooltip text={t('tooltips.language')} /></label>
               <input
                 id="language"
                 type="text"
@@ -256,22 +446,7 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="languageCandidates">{t('upload.languageCandidates')}</label>
-              <input
-                id="languageCandidates"
-                type="text"
-                value={languageCandidates}
-                onChange={(e) => setLanguageCandidates(e.target.value)}
-                placeholder={t('upload.languageCandidatesPlaceholder')}
-                className="text-input"
-              />
-              <small className="help-text">
-                {t('upload.languageCandidatesHelp')}
-              </small>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="customTerms">{t('upload.customTerms')}</label>
+              <label htmlFor="customTerms">{t('upload.customTerms')}<InfoTooltip text={t('tooltips.customTerms')} /></label>
               <textarea
                 id="customTerms"
                 value={customTerms}
@@ -286,7 +461,7 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="termsFileInput">{t('upload.termsFile')}</label>
+              <label htmlFor="termsFileInput">{t('upload.termsFile')}<InfoTooltip text={t('tooltips.termsFile')} /></label>
               <input
                 id="termsFileInput"
                 type="file"
@@ -307,7 +482,7 @@ function App() {
                   checked={enableDiarization}
                   onChange={(e) => setEnableDiarization(e.target.checked)}
                 />
-                {t('upload.enableDiarization')} {method !== 'azure' && t('upload.azureOnly')}
+                {t('upload.enableDiarization')}<InfoTooltip text={t('tooltips.enableDiarization')} />
               </label>
             </div>
 
@@ -318,9 +493,66 @@ function App() {
                   checked={enableNlp}
                   onChange={(e) => setEnableNlp(e.target.checked)}
                 />
-                {t('upload.enableNlp')}
+                {t('upload.enableNlp')}<InfoTooltip text={t('tooltips.enableNlp')} />
               </label>
             </div>
+
+            {/* NLP Settings inline – visible when NLP is enabled */}
+            {enableNlp && (
+              <div className="settings-section nlp-settings">
+                <h4 className="settings-section-title">{t('upload.nlpSectionTitle')}</h4>
+
+                <div className="form-group">
+                  <label htmlFor="summarySentenceCount">{t('upload.summaryLength')}<InfoTooltip text={t('tooltips.summaryLength')} /></label>
+                  <div className="range-with-value">
+                    <input
+                      id="summarySentenceCount"
+                      type="range"
+                      min="2"
+                      max="15"
+                      step="1"
+                      value={summarySentenceCount}
+                      onChange={(e) => setSummarySentenceCount(parseInt(e.target.value))}
+                      className="range-input"
+                    />
+                    <span className="range-value">{t('upload.summaryLengthValue', { count: summarySentenceCount })}</span>
+                  </div>
+                </div>
+
+                <div className="nlp-feature-toggles">
+                  <label className="feature-toggle">
+                    <input type="checkbox" checked={nlpSentiment} onChange={(e) => setNlpSentiment(e.target.checked)} />
+                    <span className="toggle-label">{t('upload.nlpSentiment')}</span>
+                    <InfoTooltip text={t('tooltips.nlpSentiment')} />
+                  </label>
+                  <label className="feature-toggle">
+                    <input type="checkbox" checked={nlpSegmentSentiment} onChange={(e) => setNlpSegmentSentiment(e.target.checked)} />
+                    <span className="toggle-label">{t('upload.nlpSegmentSentiment')}</span>
+                    <InfoTooltip text={t('tooltips.nlpSegmentSentiment')} />
+                  </label>
+                  <label className="feature-toggle">
+                    <input type="checkbox" checked={nlpKeyPhrases} onChange={(e) => setNlpKeyPhrases(e.target.checked)} />
+                    <span className="toggle-label">{t('upload.nlpKeyPhrases')}</span>
+                    <InfoTooltip text={t('tooltips.nlpKeyPhrases')} />
+                  </label>
+                  <label className="feature-toggle">
+                    <input type="checkbox" checked={nlpEntities} onChange={(e) => setNlpEntities(e.target.checked)} />
+                    <span className="toggle-label">{t('upload.nlpEntities')}</span>
+                    <InfoTooltip text={t('tooltips.nlpEntities')} />
+                  </label>
+                  <label className="feature-toggle">
+                    <input type="checkbox" checked={nlpActionItems} onChange={(e) => setNlpActionItems(e.target.checked)} />
+                    <span className="toggle-label">{t('upload.nlpActionItems')}</span>
+                    <InfoTooltip text={t('tooltips.nlpActionItems')} />
+                  </label>
+                  <label className="feature-toggle">
+                    <input type="checkbox" checked={nlpSummary} onChange={(e) => setNlpSummary(e.target.checked)} />
+                    <span className="toggle-label">{t('upload.nlpSummary')}</span>
+                    <InfoTooltip text={t('tooltips.nlpSummary')} />
+                  </label>
+                </div>
+              </div>
+            )}
 
             {error && <div className="error" role="alert" aria-live="assertive">{error}</div>}
 
@@ -337,127 +569,12 @@ function App() {
 
         <section className="jobs-section" aria-labelledby="jobs-heading">
           <h2 id="jobs-heading">{t('jobs.title')}</h2>
-          {jobs.length === 0 ? (
+          {sortedJobs.length === 0 ? (
             <p className="no-jobs">{t('jobs.noJobs')}</p>
           ) : (
             <div className="jobs-list" role="list">
-              {jobs.map((job) => (
-                <article key={job.job_id} className={`job-card ${job.status}`} role="listitem">
-                  <div className="job-header">
-                    <h3>{job.filename}</h3>
-                    <span className={`status-badge ${job.status}`} role="status" aria-label={t(`status.${job.status}`)}>
-                      {t(`status.${job.status}`)}
-                    </span>
-                  </div>
-                  <div className="job-info">
-                    <p><strong>{t('jobs.method')}</strong> {job.method}</p>
-                    <p><strong>{t('jobs.id')}</strong> {job.job_id}</p>
-                    {job.error && <p className="error"><strong>{t('jobs.error')}</strong> {job.error}</p>}
-                  </div>
-                  
-                  {/* Show progress bar for pending/processing jobs */}
-                  {(job.status === 'pending' || job.status === 'processing') && (
-                    <ProgressBar progress={job.progress} status={job.status} />
-                  )}
-                  
-                  {job.status === 'completed' && job.result && (
-                    <div className="results">
-                      {/* Export button */}
-                      <div className="results-header">
-                        <h4>{t('results.title')}</h4>
-                        <ExportButton 
-                          jobId={job.job_id}
-                          transcription={job.result.transcription}
-                          nlpAnalysis={job.result.nlp_analysis}
-                          filename={job.filename}
-                        />
-                      </div>
-                      
-                      {/* Audio Player */}
-                      <AudioPlayer 
-                        jobId={job.job_id}
-                        segments={job.result.transcription.segments}
-                      />
-                      
-                      {/* Transcript Search */}
-                      <TranscriptSearch 
-                        transcript={job.result.transcription.full_text}
-                        segments={job.result.transcription.segments}
-                      />
-                      
-                      <div className="transcription-text">
-                        {job.result.transcription.full_text}
-                      </div>
-                      
-                      {job.result.transcription.metadata && (
-                        <div className="metadata">
-                          <p><strong>{t('results.metadata.duration')}</strong> {job.result.transcription.duration.toFixed(2)}s</p>
-                          <p><strong>{t('results.metadata.language')}</strong> {job.result.transcription.language}</p>
-                          {job.result.transcription.metadata.speaker_count && (
-                            <p><strong>{t('results.metadata.speakers')}</strong> {job.result.transcription.metadata.speaker_count}</p>
-                          )}
-                          {job.result.transcription.metadata.custom_terms_count > 0 && (
-                            <p><strong>{t('results.metadata.customTerms')}</strong> {job.result.transcription.metadata.custom_terms_count}</p>
-                          )}
-                          {job.result.transcription.metadata.language_candidates && 
-                           job.result.transcription.metadata.language_candidates.length > 0 && (
-                            <p><strong>{t('results.metadata.multiLanguage')}</strong> {job.result.transcription.metadata.language_candidates.join(', ')}</p>
-                          )}
-                        </div>
-                      )}
-
-                      {job.result.transcription.segments && (
-                        <div className="segments">
-                          <h4>{t('results.segments.title', { count: job.result.transcription.segments.length })}</h4>
-                          <div className="segments-list">
-                            {job.result.transcription.segments.slice(0, 5).map((segment, idx) => (
-                              <div key={idx} className="segment">
-                                {segment.speaker_id && (
-                                  <SpeakerAvatar speakerId={segment.speaker_id} size="small" />
-                                )}
-                                <span className="timestamp">
-                                  [{segment.start_time.toFixed(1)}s - {segment.end_time.toFixed(1)}s]
-                                </span>
-                                {segment.speaker_id && (
-                                  <span className="speaker">{segment.speaker_id}:</span>
-                                )}
-                                <span className="text">{segment.text}</span>
-                              </div>
-                            ))}
-                            {job.result.transcription.segments.length > 5 && (
-                              <p className="more">{t('results.segments.more', { count: job.result.transcription.segments.length - 5 })}</p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {job.result.nlp_analysis && (
-                        <div className="nlp-results">
-                          <h4>{t('results.nlp.title')}</h4>
-                          {job.result.nlp_analysis.key_phrases && (
-                            <div className="key-phrases">
-                              <strong>{t('results.nlp.keyPhrases')}</strong>
-                              <div className="tags">
-                                {job.result.nlp_analysis.key_phrases.slice(0, 10).map((phrase, idx) => (
-                                  <span key={idx} className="tag">{phrase.text}</span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {job.result.nlp_analysis.sentiment && (
-                            <div className="sentiment">
-                              <strong>{t('results.nlp.sentiment')}</strong> {job.result.nlp_analysis.sentiment.overall}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  <button onClick={() => deleteJob(job.job_id)} className="delete-button">
-                    {t('jobs.deleteButton')}
-                  </button>
-                </article>
+              {sortedJobs.map((job) => (
+                <JobCard key={job.job_id} job={job} deleteJob={deleteJob} t={t} />
               ))}
             </div>
           )}
@@ -471,3 +588,303 @@ function App() {
 }
 
 export default App;
+
+/* ------------------------------------------------------------------ */
+/* Speaker-colour helper (matches AudioPlayer & SpeakerAvatar palette) */
+/* ------------------------------------------------------------------ */
+const SPEAKER_COLORS = [
+  '#667eea', '#764ba2', '#f39c12', '#2ecc71', '#e74c3c',
+  '#3498db', '#9b59b6', '#1abc9c', '#e67e22', '#34495e',
+  '#16a085', '#c0392b',
+];
+function speakerColor(id) {
+  if (!id) return SPEAKER_COLORS[0];
+  const n = parseInt(id.match(/\d+/)?.[0] || '0', 10);
+  return SPEAKER_COLORS[n % SPEAKER_COLORS.length];
+}
+
+/* ------------------------------------------------------------------ */
+/* Group consecutive segments by speaker into "turns"                  */
+/* ------------------------------------------------------------------ */
+function groupBySpeaker(segments) {
+  if (!segments || segments.length === 0) return [];
+  const turns = [];
+  let current = null;
+
+  for (const seg of segments) {
+    const speaker = seg.speaker_id || 'Unknown';
+    if (!current || current.speaker !== speaker) {
+      current = {
+        speaker,
+        startTime: seg.start_time,
+        endTime: seg.end_time,
+        parts: [seg],
+      };
+      turns.push(current);
+    } else {
+      current.endTime = seg.end_time;
+      current.parts.push(seg);
+    }
+  }
+  return turns;
+}
+
+function formatTimestamp(seconds) {
+  if (!seconds || isNaN(seconds)) return '0:00';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* JobCard – each job gets its own audio ref + currentTime state       */
+/* ------------------------------------------------------------------ */
+function JobCard({ job, deleteJob, t }) {
+  const audioPlayerRef = useRef(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const transcriptRef = useRef(null);
+
+  // Auto-scroll transcript to active segment (fine-grained, line-by-line)
+  useEffect(() => {
+    const container = transcriptRef.current;
+    if (!container) return;
+    const active = container.querySelector('.segment-line.active');
+    if (active) {
+      const cTop = container.scrollTop;
+      const cHeight = container.clientHeight;
+      const eTop = active.offsetTop - container.offsetTop;
+      const eHeight = active.offsetHeight;
+      // Only scroll if the active segment is outside the visible area
+      if (eTop < cTop) {
+        container.scrollTop = eTop;
+      } else if (eTop + eHeight > cTop + cHeight) {
+        container.scrollTop = eTop + eHeight - cHeight;
+      }
+    }
+  }, [currentTime]);
+
+  const handleSeekTo = (time) => {
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.seekTo(time);
+    }
+  };
+
+  const METHOD_LABELS = {
+    azure: 'Azure AI Speech',
+    whisper_api: 'Azure OpenAI Whisper',
+    whisper_local: 'OpenAI Whisper (Local)',
+  };
+
+  const segments = job.result?.transcription?.segments;
+  const turns = segments ? groupBySpeaker(segments) : [];
+  const segmentSentiments = job.result?.nlp_analysis?.segment_sentiments;
+
+  return (
+    <article className={`job-card ${job.status}`} role="listitem">
+      <div className="job-header">
+        <h3>{job.filename}</h3>
+        <span className={`status-badge ${job.status}`} role="status" aria-label={t(`status.${job.status}`)}>
+          {job.status === 'uploading'
+            ? `Uploading ${job.uploadProgress || 0}%`
+            : t(`status.${job.status}`)}
+        </span>
+      </div>
+
+      {/* Upload progress bar */}
+      {job.status === 'uploading' && (
+        <div className="upload-progress-bar">
+          <div className="upload-progress-fill" style={{ width: `${job.uploadProgress || 0}%` }} />
+        </div>
+      )}
+      <div className="job-info">
+        <p><strong>{t('jobs.method')}</strong> {METHOD_LABELS[job.method] || job.method}</p>
+        <p><strong>{t('jobs.id')}</strong> {job.job_id}</p>
+        {job.error && <p className="error"><strong>{t('jobs.error')}</strong> {job.error}</p>}
+      </div>
+
+      {/* Progress bar for pending/processing jobs */}
+      {(job.status === 'pending' || job.status === 'processing') && (
+        job.pipeline_stages
+          ? <PipelineProgress
+              stages={job.pipeline_stages}
+              progress={job.progress}
+              status={job.status}
+              startedAt={job.started_at}
+            />
+          : <ProgressBar progress={job.progress} status={job.status} startedAt={job.started_at} />
+      )}
+
+      {job.status === 'completed' && job.result && (
+        <div className="results">
+          {/* Export button */}
+          <div className="results-header">
+            <h4>{t('results.title')}</h4>
+            <ExportButton
+              jobId={job.job_id}
+              transcription={job.result.transcription}
+              nlpAnalysis={job.result.nlp_analysis}
+              filename={job.filename}
+            />
+          </div>
+
+          {/* Audio Player */}
+          <AudioPlayer
+            ref={audioPlayerRef}
+            jobId={job.job_id}
+            segments={segments}
+            onTimeUpdate={setCurrentTime}
+            segmentSentiments={segmentSentiments}
+          />
+
+          {/* Transcript Search */}
+          <TranscriptSearch
+            transcript={job.result.transcription.full_text}
+            segments={segments}
+          />
+
+          {/* ---- Speaker-segmented transcript ---- */}
+          {turns.length > 0 ? (
+            <div className="transcript-by-speaker" ref={transcriptRef}>
+              {turns.map((turn, idx) => {
+                const isActive =
+                  currentTime >= turn.startTime && currentTime < turn.endTime;
+                return (
+                  <div
+                    key={idx}
+                    className={`transcript-turn ${isActive ? 'active' : ''}`}
+                    onClick={() => handleSeekTo(turn.startTime)}
+                  >
+                    <div className="turn-header">
+                      <SpeakerAvatar speakerId={turn.speaker} size="small" />
+                      <span className="turn-speaker" style={{ color: speakerColor(turn.speaker) }}>
+                        {turn.speaker}
+                      </span>
+                      <span className="turn-time">
+                        {formatTimestamp(turn.startTime)} – {formatTimestamp(turn.endTime)}
+                      </span>
+                    </div>
+                    <div className="turn-text">
+                      {turn.parts.map((seg, si) => {
+                        const segActive =
+                          currentTime >= seg.start_time && currentTime < seg.end_time;
+                        return (
+                          <span
+                            key={si}
+                            className={`segment-line${segActive ? ' active' : ''}`}
+                            onClick={(e) => { e.stopPropagation(); handleSeekTo(seg.start_time); }}
+                          >
+                            {si > 0 && ' '}
+                            {seg.text}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="transcription-text">
+              {job.result.transcription.full_text}
+            </div>
+          )}
+
+          {/* Metadata */}
+          {job.result.transcription.metadata && (
+            <div className="metadata">
+              <p><strong>{t('results.metadata.duration')}</strong> {job.result.transcription.duration?.toFixed(2)}s</p>
+              <p><strong>{t('results.metadata.language')}</strong> {job.result.transcription.language}</p>
+              {job.result.transcription.metadata.speaker_count && (
+                <p><strong>{t('results.metadata.speakers')}</strong> {job.result.transcription.metadata.speaker_count}</p>
+              )}
+              {job.result.transcription.metadata.custom_terms_count > 0 && (
+                <p><strong>{t('results.metadata.customTerms')}</strong> {job.result.transcription.metadata.custom_terms_count}</p>
+              )}
+              {job.result.transcription.metadata.language_candidates &&
+               job.result.transcription.metadata.language_candidates.length > 0 && (
+                <p><strong>{t('results.metadata.multiLanguage')}</strong> {job.result.transcription.metadata.language_candidates.join(', ')}</p>
+              )}
+            </div>
+          )}
+
+          {/* NLP analysis */}
+          {job.result.nlp_analysis && (
+            <div className="nlp-results">
+              <h4>{t('results.nlp.title')}</h4>
+
+              {/* Summary */}
+              {job.result.nlp_analysis.summary_text && (
+                <div className="nlp-section nlp-summary">
+                  <h5>{t('results.nlp.summary')}</h5>
+                  <p>{job.result.nlp_analysis.summary_text}</p>
+                </div>
+              )}
+
+              {/* Action Items */}
+              <div className="nlp-section nlp-action-items">
+                <h5>{t('results.nlp.actionItems')}</h5>
+                {job.result.nlp_analysis.action_items && job.result.nlp_analysis.action_items.length > 0 ? (
+                  <ul>
+                    {job.result.nlp_analysis.action_items.map((item, idx) => (
+                      <li key={idx}>
+                        <span className="action-text">{item.text}</span>
+                        {item.assignee && <span className="action-assignee">@{item.assignee}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="nlp-empty">{t('results.nlp.noActionItems')}</p>
+                )}
+              </div>
+
+              {/* Key Phrases */}
+              <div className="nlp-section nlp-key-phrases">
+                <h5>{t('results.nlp.keyPhrases')}</h5>
+                {job.result.nlp_analysis.key_phrases && job.result.nlp_analysis.key_phrases.length > 0 ? (
+                  <div className="tags">
+                    {job.result.nlp_analysis.key_phrases.slice(0, 15).map((phrase, idx) => (
+                      <span key={idx} className="tag">{phrase.text}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="nlp-empty">{t('results.nlp.noKeyPhrases')}</p>
+                )}
+              </div>
+
+              {/* Topics */}
+              {job.result.nlp_analysis.topics && job.result.nlp_analysis.topics.length > 0 && (
+                <div className="nlp-section nlp-topics">
+                  <h5>{t('results.nlp.topics')}</h5>
+                  <div className="tags">
+                    {job.result.nlp_analysis.topics.map((topic, idx) => (
+                      <span key={idx} className="tag tag-topic">{topic}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Entities */}
+              {job.result.nlp_analysis.entities && job.result.nlp_analysis.entities.length > 0 && (
+                <div className="nlp-section nlp-entities">
+                  <h5>{t('results.nlp.entities')}</h5>
+                  <div className="entity-list">
+                    {job.result.nlp_analysis.entities.slice(0, 15).map((entity, idx) => (
+                      <span key={idx} className="entity-chip" title={`${entity.category}${entity.subcategory ? ' / ' + entity.subcategory : ''} (${(entity.confidence * 100).toFixed(0)}%)`}>
+                        <span className="entity-category-dot" data-category={entity.category} />
+                        {entity.text}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      <button onClick={() => deleteJob(job.job_id)} className="delete-button">
+        {t('jobs.deleteButton')}
+      </button>
+    </article>
+  );
+}

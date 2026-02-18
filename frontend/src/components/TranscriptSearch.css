@@ -1,8 +1,9 @@
 .transcript-search {
   margin-top: 1rem;
   padding: 1rem;
-  background-color: #f9f9f9;
-  border-radius: 4px;
+  background-color: var(--bg-tertiary, #f9f9f9);
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #ddd);
 }
 
 .search-controls {
@@ -14,15 +15,21 @@
 .search-input {
   flex: 1;
   padding: 0.5rem;
-  border: 2px solid #ddd;
-  border-radius: 4px;
+  border: 2px solid var(--border-color, #ddd);
+  border-radius: 6px;
   font-size: 1rem;
+  background-color: var(--bg-secondary, #fff);
+  color: var(--text-primary, #333);
   transition: border-color 0.3s;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--gradient-start, #667eea);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted, #999);
 }
 
 .search-navigation {
@@ -33,23 +40,23 @@
 
 .match-counter {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-tertiary, #666);
   white-space: nowrap;
 }
 
 .nav-button {
   padding: 0.25rem 0.5rem;
-  background-color: #667eea;
+  background: linear-gradient(135deg, var(--gradient-start, #667eea), var(--gradient-end, #764ba2));
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
-  transition: background-color 0.2s;
+  transition: opacity 0.2s;
 }
 
 .nav-button:hover {
-  background-color: #5568d3;
+  opacity: 0.85;
 }
 
 .nav-button:active {
@@ -59,7 +66,7 @@
 .no-results {
   margin-top: 0.5rem;
   padding: 0.5rem;
-  color: #999;
+  color: var(--text-muted, #999);
   font-style: italic;
   text-align: center;
 }
@@ -72,27 +79,27 @@
 
 .search-result-item {
   padding: 0.75rem;
-  background-color: white;
-  border-left: 3px solid #667eea;
+  background-color: var(--bg-secondary, white);
+  border-left: 3px solid var(--gradient-start, #667eea);
   margin-bottom: 0.5rem;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.9rem;
 }
 
 .result-timestamp {
-  color: #3498db;
+  color: var(--info-color, #3498db);
   font-weight: 600;
   margin-right: 0.5rem;
 }
 
 .result-speaker {
-  color: #9b59b6;
+  color: var(--gradient-end, #9b59b6);
   font-weight: 600;
   margin-right: 0.5rem;
 }
 
 .result-text {
-  color: #333;
+  color: var(--text-primary, #333);
 }
 
 .search-highlight {
@@ -106,15 +113,15 @@
   width: 100%;
   margin-top: 0.5rem;
   padding: 0.5rem;
-  background-color: #667eea;
+  background: linear-gradient(135deg, var(--gradient-start, #667eea), var(--gradient-end, #764ba2));
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: background-color 0.2s;
+  transition: opacity 0.2s;
 }
 
 .show-more-button:hover {
-  background-color: #5568d3;
+  opacity: 0.85;
 }

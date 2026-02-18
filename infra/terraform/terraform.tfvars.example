@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# Example Terraform Variables
+# Copy this file to terraform.tfvars and fill in your values.
+# ---------------------------------------------------------------------------
+
+subscription_id     = "00000000-0000-0000-0000-000000000000"
+resource_group_name = "my-existing-resource-group"
+project_name        = "meeting-processor"
+# location          = ""  # leave empty to inherit from the resource group
+environment         = "dev"
+
+# Cognitive Services SKUs (F0 = free tier where available)
+speech_services_sku = "S0"
+text_analytics_sku  = "S"
+
+# Storage
+storage_account_tier     = "Standard"
+storage_replication_type = "LRS"
+
+# Container Registry
+acr_sku = "Basic"
+
+# App Service
+app_service_sku  = "B1"
+docker_image_tag = "latest"
+
+# Function App (set to false to skip serverless deployment)
+deploy_function_app = true
+
+# Application settings
+default_language           = "en-US"
+enable_speaker_diarization = true
+max_speakers               = 10
+
+# Optional – leave empty if not using Whisper
+# openai_api_key = "sk-..."
+
+tags = {
+  owner = "your-team"
+}

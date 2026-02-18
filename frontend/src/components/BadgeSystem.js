@@ -179,7 +179,10 @@ function BadgeSystem({ jobs, onNewBadge }) {
             aria-hidden="true"
           />
           <div className="badge-panel">
-            <h3>{t('badges.title', { defaultValue: 'Achievements' })}</h3>
+            <div className="badge-panel-header">
+              <h3>{t('badges.title', { defaultValue: 'Achievements' })}</h3>
+              <button className="badge-panel-close" onClick={() => setShowPanel(false)} aria-label="Close">×</button>
+            </div>
             <div className="badge-progress">
               <div className="badge-progress-bar" style={{ width: `${progress}%` }} />
               <span className="badge-progress-text">
@@ -193,15 +196,15 @@ function BadgeSystem({ jobs, onNewBadge }) {
                   <div 
                     key={badge.id}
                     className={`badge-item ${earned ? 'earned' : 'locked'}`}
-                    title={earned ? badge.name : '???'}
+                    title={t(`badges.${badge.id}.description`, { defaultValue: badge.description })}
                   >
                     <div className="badge-icon">{earned ? badge.icon : '🔒'}</div>
                     <div className="badge-info">
                       <div className="badge-name">
-                        {earned ? t(`badges.${badge.id}.name`, { defaultValue: badge.name }) : '???'}
+                        {t(`badges.${badge.id}.name`, { defaultValue: badge.name })}
                       </div>
                       <div className="badge-description">
-                        {earned ? t(`badges.${badge.id}.description`, { defaultValue: badge.description }) : '???'}
+                        {t(`badges.${badge.id}.description`, { defaultValue: badge.description })}
                       </div>
                     </div>
                   </div>
