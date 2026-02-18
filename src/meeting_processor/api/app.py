@@ -39,13 +39,14 @@ logger = logging.getLogger(__name__)
 # Persistent job storage (file-backed, survives container restarts)
 # ---------------------------------------------------------------------------
 
+
 class PersistentJobStore:
     """Thread-safe, file-backed job storage."""
 
     def __init__(self, path: Optional[str] = None):
         if path is None:
-            transcription_dir = os.getenv('TRANSCRIPTION_DIR', './meeting_transcription')
-            path = str(Path(transcription_dir) / 'jobs.json')
+            transcription_dir = os.getenv("TRANSCRIPTION_DIR", "./meeting_transcription")
+            path = str(Path(transcription_dir) / "jobs.json")
         self._path = Path(path)
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
@@ -128,8 +129,8 @@ app.add_middleware(
 jobs_db = PersistentJobStore()
 
 # Temporary file storage directory (use persistent /home/ mount on Azure App Service or configurable path)
-transcription_dir = os.getenv('TRANSCRIPTION_DIR', './meeting_transcription')
-AUDIO_DIR = Path(transcription_dir) / 'audio'
+transcription_dir = os.getenv("TRANSCRIPTION_DIR", "./meeting_transcription")
+AUDIO_DIR = Path(transcription_dir) / "audio"
 AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
 # Export constants
@@ -469,10 +470,13 @@ def process_transcription(
         if enable_nlp:
             stages["nlp"] = _stage("pending", "Waiting")
 
-        jobs_db.update_fields(job_id, {
-            "status": JobStatus.PROCESSING,
-            "started_at": datetime.now(timezone.utc).isoformat(),
-        })
+        jobs_db.update_fields(
+            job_id,
+            {
+                "status": JobStatus.PROCESSING,
+                "started_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
         _update_pipeline(stages, "Starting pipeline...")
 
         # ------------------------------------------------------------------
@@ -531,23 +535,25 @@ def process_transcription(
                 word_level_timestamps=word_level_timestamps,
             )
             transcription_result = transcriber.transcribe_audio(
-                processed_path, progress_callback=on_segment_recognized,
+                processed_path,
+                progress_callback=on_segment_recognized,
             )
 
         elif method == "whisper_local":
             transcriber = WhisperTranscriber(
-                model_size=whisper_model, language=language,
-                use_api=False, custom_terms=custom_terms,
+                model_size=whisper_model,
+                language=language,
+                use_api=False,
+                custom_terms=custom_terms,
             )
             transcription_result = transcriber.transcribe_audio(
-                processed_path, enable_diarization=enable_diarization,
+                processed_path,
+                enable_diarization=enable_diarization,
             )
 
         elif method == "whisper_api":
             if not azure_config.openai_endpoint:
-                raise ValueError(
-                    "Azure OpenAI endpoint not configured. Deploy Whisper via Azure AI Foundry."
-                )
+                raise ValueError("Azure OpenAI endpoint not configured. Deploy Whisper via Azure AI Foundry.")
             transcriber = WhisperTranscriber(
                 language=language,
                 use_api=True,
@@ -618,12 +624,16 @@ def process_transcription(
                 # Fast API returns all at once; show completion count
                 if c == 0:
                     stages["diarization"] = _stage(
-                        "running", "Sending audio to API...", 10,
+                        "running",
+                        "Sending audio to API...",
+                        10,
                         sub_tasks=dict(diar_sub),
                     )
                 else:
                     stages["diarization"] = _stage(
-                        "running", f"API returned {c} phrases", 80,
+                        "running",
+                        f"API returned {c} phrases",
+                        80,
                         sub_tasks=dict(diar_sub),
                     )
                 _update_pipeline(stages)
@@ -641,14 +651,17 @@ def process_transcription(
             # Try fast REST API first, fall back to real-time SDK
             try:
                 diar_segs = diarizer.diarize_fast(
-                    processed_path, progress_callback=_diar_fast_progress,
+                    processed_path,
+                    progress_callback=_diar_fast_progress,
                 )
             except Exception as fast_err:
                 logger.warning(f"Fast diarization failed, falling back to real-time: {fast_err}")
                 diar_sub["fast_api"] = "error"
                 diar_sub["realtime_fallback"] = "running"
                 stages["diarization"] = _stage(
-                    "running", "Falling back to real-time...", 5,
+                    "running",
+                    "Falling back to real-time...",
+                    5,
                     sub_tasks=dict(diar_sub),
                 )
                 _update_pipeline(stages)
@@ -658,13 +671,16 @@ def process_transcription(
                     pct = min(95, int(c / max(total_seg, 1) * 100))
                     diar_sub["realtime_fallback"] = "running"
                     stages["diarization"] = _stage(
-                        "running", f"{c} of {total_seg} segments", pct,
+                        "running",
+                        f"{c} of {total_seg} segments",
+                        pct,
                         sub_tasks=dict(diar_sub),
                     )
                     _update_pipeline(stages)
 
                 diar_segs = diarizer.diarize_only(
-                    processed_path, progress_callback=_slow_progress,
+                    processed_path,
+                    progress_callback=_slow_progress,
                 )
                 diar_sub["realtime_fallback"] = "done"
 
@@ -688,14 +704,27 @@ def process_transcription(
             stages["nlp"] = _stage("running", "Starting...", 0, sub_tasks=nlp_sub)
             _update_pipeline(stages, "Analyzing content...")
 
-            nlp_subtasks_total = sum([
-                nlp_opts.get("enable_key_phrases", True) if not nlp_features else "key_phrases" in (nlp_features or ""),
-                nlp_opts.get("enable_sentiment", True) if not nlp_features else "sentiment" in (nlp_features or ""),
-                nlp_opts.get("enable_entities", True) if not nlp_features else "entities" in (nlp_features or ""),
-                nlp_opts.get("enable_summary", True) if not nlp_features else "summary" in (nlp_features or ""),
-                nlp_opts.get("enable_action_items", True) if not nlp_features else "action_items" in (nlp_features or ""),
-                1,  # segment sentiment
-            ]) or 6
+            nlp_subtasks_total = (
+                sum(
+                    [
+                        (
+                            nlp_opts.get("enable_key_phrases", True)
+                            if not nlp_features
+                            else "key_phrases" in (nlp_features or "")
+                        ),
+                        nlp_opts.get("enable_sentiment", True) if not nlp_features else "sentiment" in (nlp_features or ""),
+                        nlp_opts.get("enable_entities", True) if not nlp_features else "entities" in (nlp_features or ""),
+                        nlp_opts.get("enable_summary", True) if not nlp_features else "summary" in (nlp_features or ""),
+                        (
+                            nlp_opts.get("enable_action_items", True)
+                            if not nlp_features
+                            else "action_items" in (nlp_features or "")
+                        ),
+                        1,  # segment sentiment
+                    ]
+                )
+                or 6
+            )
             completed_count = [0]
 
             def _nlp_progress(task_name, status):
@@ -752,7 +781,8 @@ def process_transcription(
                     task_result = future.result()
                     if key == "diarization":
                         transcription_result = WhisperTranscriber.merge_diarization(
-                            transcription_result, task_result,
+                            transcription_result,
+                            task_result,
                         )
                         result["transcription"] = transcription_result.to_dict()
                         logger.info(f"Hybrid diarization merged for job {job_id}")
@@ -765,9 +795,7 @@ def process_transcription(
 
         # If NLP ran but diarization also ran, re-build segment sentiments
         # with updated speaker IDs (from diarization merge)
-        if (wants_diarization and enable_nlp
-                and "nlp_analysis" in result
-                and "diarization" in parallel_futures):
+        if wants_diarization and enable_nlp and "nlp_analysis" in result and "diarization" in parallel_futures:
             # Update segment speaker info in NLP results
             if segments_dicts and result.get("nlp_analysis", {}).get("segment_sentiments"):
                 updated_segs = result["transcription"].get("segments", [])
@@ -784,22 +812,28 @@ def process_transcription(
                 stages[k] = _stage("done", "Skipped", 100)
         _update_pipeline(stages, "Completed")
 
-        jobs_db.update_fields(job_id, {
-            "status": JobStatus.COMPLETED,
-            "result": result,
-            "error": None,
-            "progress": "Completed",
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-        })
+        jobs_db.update_fields(
+            job_id,
+            {
+                "status": JobStatus.COMPLETED,
+                "result": result,
+                "error": None,
+                "progress": "Completed",
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
         logger.info(f"Job {job_id} completed successfully")
 
     except Exception as e:
         logger.error(f"Job {job_id} failed: {e}", exc_info=True)
-        jobs_db.update_fields(job_id, {
-            "status": JobStatus.FAILED,
-            "error": str(e),
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-        })
+        jobs_db.update_fields(
+            job_id,
+            {
+                "status": JobStatus.FAILED,
+                "error": str(e),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
 
     finally:
         try:
@@ -868,6 +902,7 @@ async def serve_audio(job_id: str, request: Request):
     else:
         # Full file response with Accept-Ranges header
         from fastapi.responses import FileResponse
+
         return FileResponse(
             path=str(file_path),
             media_type=mime_type,
