@@ -6,6 +6,7 @@ through transcription to content analysis.
 """
 
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, Any, Optional
 import json
@@ -189,7 +190,14 @@ class MeetingProcessor:
         """
         return self.content_analyzer.analyze_transcription(transcription_text)
 
-    def process_batch(self, audio_files: list[str], output_dir: str, skip_preprocessing: bool = False) -> list[Dict[str, Any]]:
+    def process_batch(
+        self,
+        audio_files: list[str],
+        output_dir: str,
+        skip_preprocessing: bool = False,
+        max_concurrent: int = 1,
+        parallel: bool = False,
+    ) -> list[Dict[str, Any]]:
         """
         Process multiple audio files in batch.
 
@@ -197,14 +205,21 @@ class MeetingProcessor:
             audio_files: List of audio file paths
             output_dir: Directory to save all outputs
             skip_preprocessing: Skip audio preprocessing if True
+            max_concurrent: Maximum number of files to process concurrently (used when parallel=True)
+            parallel: Enable parallel processing using a thread pool
 
         Returns:
             List of result dictionaries, one per file
         """
-        logger.info(f"Starting batch processing of {len(audio_files)} files")
+        logger.info(
+            f"Starting batch processing of {len(audio_files)} files (parallel={parallel}, max_concurrent={max_concurrent})"
+        )
 
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
+
+        if parallel:
+            return self._process_batch_parallel(audio_files, output_path, skip_preprocessing, max(1, max_concurrent))
 
         results = []
         for i, audio_file in enumerate(audio_files, 1):
@@ -219,6 +234,40 @@ class MeetingProcessor:
                 results.append({"input_file": audio_file, "error": str(e)})
 
         logger.info(f"Batch processing complete. Processed {len(results)} files")
+        return results
+
+    def _process_batch_parallel(
+        self,
+        audio_files: list[str],
+        output_path: Path,
+        skip_preprocessing: bool,
+        max_concurrent: int,
+    ) -> list[Dict[str, Any]]:
+        """Process batch files in parallel using a thread pool."""
+        results: list[Optional[Dict[str, Any]]] = [None] * len(audio_files)
+
+        with ThreadPoolExecutor(max_workers=max_concurrent, thread_name_prefix="batch") as executor:
+            future_to_index = {
+                executor.submit(
+                    self.process_audio_file,
+                    audio_file,
+                    str(output_path),
+                    skip_preprocessing,
+                ): i
+                for i, audio_file in enumerate(audio_files)
+            }
+
+            for future in as_completed(future_to_index):
+                idx = future_to_index[future]
+                audio_file = audio_files[idx]
+                try:
+                    results[idx] = future.result()
+                    logger.info(f"Parallel batch: completed {audio_file}")
+                except Exception as e:
+                    logger.error(f"Parallel batch: failed to process {audio_file}: {e}")
+                    results[idx] = {"input_file": audio_file, "error": str(e)}
+
+        logger.info(f"Parallel batch processing complete. Processed {len(results)} files")
         return results
 
 
