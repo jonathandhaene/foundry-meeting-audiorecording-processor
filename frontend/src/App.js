@@ -63,6 +63,11 @@ function App() {
   const [nlpSummary, setNlpSummary] = useState(true);
   const [nlpSegmentSentiment, setNlpSegmentSentiment] = useState(true);
   const [sentimentThreshold, setSentimentThreshold] = useState(0.6);
+  // Chunk size and batch processing
+  const [chunkSize, setChunkSize] = useState(0);
+  const [batchFiles, setBatchFiles] = useState([]);
+  const [parallelBatch, setParallelBatch] = useState(false);
+  const [maxConcurrent, setMaxConcurrent] = useState(2);
   // Load existing jobs from backend on mount
   useEffect(() => {
     const loadJobs = async () => {
@@ -135,7 +140,17 @@ function App() {
   }, [jobs, updateJobs]);
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selected = Array.from(e.target.files);
+    if (selected.length === 1) {
+      setFile(selected[0]);
+      setBatchFiles([]);
+    } else if (selected.length > 1) {
+      setFile(null);
+      setBatchFiles(selected);
+    } else {
+      setFile(null);
+      setBatchFiles([]);
+    }
     setError('');
   };
 
@@ -146,7 +161,8 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!file) {
+    const isBatch = batchFiles.length > 1;
+    if (!file && !isBatch) {
       setError(t('errors.noFile'));
       return;
     }
@@ -155,6 +171,109 @@ function App() {
     setError('');
     setUploadProgress(0);
 
+    const buildCommonFormData = (fd) => {
+      fd.append('method', method);
+      if (language) fd.append('language', language);
+      fd.append('enable_diarization', enableDiarization);
+      fd.append('whisper_model', whisperModel);
+      fd.append('enable_nlp', enableNlp);
+      if (customTerms) fd.append('custom_terms', customTerms);
+      if (termsFile) fd.append('terms_file', termsFile);
+      if (languageCandidates) fd.append('language_candidates', languageCandidates);
+      if (chunkSize > 0) fd.append('chunk_size', chunkSize);
+      // Audio pre-processing settings
+      fd.append('audio_channels', audioChannels);
+      fd.append('audio_sample_rate', audioSampleRate);
+      fd.append('audio_bit_rate', audioBitRate);
+      // Advanced settings
+      if (method === 'azure') {
+        fd.append('profanity_filter', profanityFilter);
+        fd.append('max_speakers', maxSpeakers);
+        fd.append('word_level_timestamps', wordLevelTimestamps);
+      }
+      if (method === 'whisper_api') {
+        if (whisperTemperature > 0) fd.append('whisper_temperature', whisperTemperature);
+        if (whisperPrompt) fd.append('whisper_prompt', whisperPrompt);
+      }
+      if (enableNlp) {
+        fd.append('summary_sentence_count', summarySentenceCount);
+        const features = [];
+        if (nlpKeyPhrases) features.push('key_phrases');
+        if (nlpEntities) features.push('entities');
+        if (nlpActionItems) features.push('action_items');
+        if (nlpSummary) features.push('summary');
+        if (nlpSegmentSentiment) features.push('segment_sentiment');
+        fd.append('nlp_features', features.join(','));
+        if (nlpSegmentSentiment) fd.append('sentiment_confidence_threshold', sentimentThreshold);
+      }
+    };
+
+    if (isBatch) {
+      // Batch mode: POST to /api/batch with multiple files
+      const formData = new FormData();
+      batchFiles.forEach((f) => formData.append('files', f));
+      buildCommonFormData(formData);
+      formData.append('parallel_batch', parallelBatch);
+      formData.append('max_concurrent', maxConcurrent);
+
+      // Create placeholder jobs for UI feedback
+      const tempIds = batchFiles.map((f) => ({
+        job_id: `uploading-${Date.now()}-${f.name}`,
+        status: 'uploading',
+        filename: f.name,
+        method,
+        created_at: new Date().toISOString(),
+        uploadProgress: 0,
+      }));
+      setJobs(prev => [...tempIds, ...prev]);
+
+      try {
+        const response = await axios.post('/api/batch', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          onUploadProgress: (progressEvent) => {
+            const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(pct);
+          },
+        });
+
+        const newJobs = response.data.job_ids.map((jid, i) => ({
+          job_id: jid,
+          status: 'pending',
+          filename: batchFiles[i]?.name || `file-${i + 1}`,
+          method,
+          created_at: new Date().toISOString(),
+        }));
+
+        setJobs(prev => {
+          const withoutPlaceholders = prev.filter(j => !tempIds.some(t => t.job_id === j.job_id));
+          return [...newJobs, ...withoutPlaceholders];
+        });
+        setFile(null);
+        setBatchFiles([]);
+        setCustomTerms('');
+        setLanguageCandidates('');
+        setUploadProgress(0);
+        document.getElementById('fileInput').value = '';
+        if (document.getElementById('termsFileInput')) {
+          document.getElementById('termsFileInput').value = '';
+        }
+        toast.info(t('notifications.batchStarted', {
+          defaultValue: `Batch of ${newJobs.length} job(s) started`,
+          count: newJobs.length,
+        }));
+      } catch (error) {
+        setJobs(prev => prev.filter(j => !tempIds.some(t => t.job_id === j.job_id)));
+        const errorMsg = error.response?.data?.detail || t('errors.uploadFailed');
+        setError(errorMsg);
+        toast.error(errorMsg);
+      } finally {
+        setLoading(false);
+        setUploadProgress(0);
+      }
+      return;
+    }
+
+    // Single file mode (existing flow)
     // Create an immediate "uploading" job for instant UI feedback
     const tempId = `uploading-${Date.now()}`;
     const uploadingJob = {
@@ -169,41 +288,7 @@ function App() {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('method', method);
-    if (language) formData.append('language', language);
-    formData.append('enable_diarization', enableDiarization);
-    formData.append('whisper_model', whisperModel);
-    formData.append('enable_nlp', enableNlp);
-    if (customTerms) formData.append('custom_terms', customTerms);
-    if (termsFile) formData.append('terms_file', termsFile);
-    if (languageCandidates) formData.append('language_candidates', languageCandidates);
-
-    // Audio pre-processing settings
-    formData.append('audio_channels', audioChannels);
-    formData.append('audio_sample_rate', audioSampleRate);
-    formData.append('audio_bit_rate', audioBitRate);
-
-    // Advanced settings
-    if (method === 'azure') {
-      formData.append('profanity_filter', profanityFilter);
-      formData.append('max_speakers', maxSpeakers);
-      formData.append('word_level_timestamps', wordLevelTimestamps);
-    }
-    if (method === 'whisper_api') {
-      if (whisperTemperature > 0) formData.append('whisper_temperature', whisperTemperature);
-      if (whisperPrompt) formData.append('whisper_prompt', whisperPrompt);
-    }
-    if (enableNlp) {
-      formData.append('summary_sentence_count', summarySentenceCount);
-      const features = [];
-      if (nlpKeyPhrases) features.push('key_phrases');
-      if (nlpEntities) features.push('entities');
-      if (nlpActionItems) features.push('action_items');
-      if (nlpSummary) features.push('summary');
-      if (nlpSegmentSentiment) features.push('segment_sentiment');
-      formData.append('nlp_features', features.join(','));
-      if (nlpSegmentSentiment) formData.append('sentiment_confidence_threshold', sentimentThreshold);
-    }
+    buildCommonFormData(formData);
 
     try {
       const response = await axios.post('/api/transcribe', formData, {
@@ -314,12 +399,18 @@ function App() {
                 id="fileInput"
                 type="file"
                 accept="audio/*"
+                multiple
                 onChange={handleFileChange}
                 className="file-input"
                 aria-required="true"
-                aria-describedby={file ? "file-selected-info" : undefined}
+                aria-describedby={file || batchFiles.length > 0 ? "file-selected-info" : undefined}
               />
               {file && <p id="file-selected-info" className="file-info">{t('upload.fileSelected', { filename: file.name })}</p>}
+              {batchFiles.length > 1 && (
+                <p id="file-selected-info" className="file-info">
+                  {t('upload.batchFilesSelected', { defaultValue: `${batchFiles.length} files selected for batch processing`, count: batchFiles.length })}
+                </p>
+              )}
             </div>
 
             <div className="form-group">
@@ -535,6 +626,65 @@ function App() {
               </div>
             </div>
 
+            {/* Processing Settings: chunk size + batch options */}
+            <div className="settings-section processing-options">
+              <h4 className="settings-section-title">{t('upload.processingSectionTitle', { defaultValue: '⚙️ Processing Settings' })}</h4>
+
+              <div className="form-group">
+                <label htmlFor="chunkSize">{t('upload.chunkSize', { defaultValue: 'Chunk Size (seconds)' })}<InfoTooltip text={t('tooltips.chunkSize', { defaultValue: 'Split audio into chunks of this size before transcription. Useful for very large files. Set to 0 to disable chunking (process the full file at once).' })} /></label>
+                <div className="range-with-value">
+                  <input
+                    id="chunkSize"
+                    type="range"
+                    min="0"
+                    max="600"
+                    step="30"
+                    value={chunkSize}
+                    onChange={(e) => setChunkSize(parseInt(e.target.value))}
+                    className="range-input"
+                    aria-valuetext={chunkSize === 0 ? 'Auto (disabled)' : `${chunkSize} seconds`}
+                  />
+                  <span className="range-value">
+                    {chunkSize === 0
+                      ? t('upload.chunkSizeAuto', { defaultValue: 'Auto' })
+                      : t('upload.chunkSizeValue', { defaultValue: `${chunkSize}s`, count: chunkSize })}
+                  </span>
+                </div>
+                <small className="help-text">
+                  {t('upload.chunkSizeHelp', { defaultValue: '0 = process the full file at once. Increase for very long recordings to reduce memory usage.' })}
+                </small>
+              </div>
+
+              <div className="form-group checkbox-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={parallelBatch}
+                    onChange={(e) => setParallelBatch(e.target.checked)}
+                  />
+                  {t('upload.parallelBatch', { defaultValue: 'Enable parallel batch processing' })}<InfoTooltip text={t('tooltips.parallelBatch', { defaultValue: 'When multiple files are selected, process them in parallel to reduce total processing time. Requires more system resources.' })} />
+                </label>
+              </div>
+
+              {parallelBatch && (
+                <div className="form-group">
+                  <label htmlFor="maxConcurrent">{t('upload.maxConcurrent', { defaultValue: 'Max concurrent files' })}<InfoTooltip text={t('tooltips.maxConcurrent', { defaultValue: 'Maximum number of audio files to process at the same time. Higher values speed up batch processing but use more memory and CPU.' })} /></label>
+                  <input
+                    id="maxConcurrent"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={maxConcurrent}
+                    onChange={(e) => setMaxConcurrent(Math.max(1, Math.min(10, parseInt(e.target.value) || 2)))}
+                    className="text-input number-input"
+                  />
+                  <small className="help-text">
+                    {t('upload.maxConcurrentHelp', { defaultValue: 'Recommended: 2–4. Higher values require more system resources.' })}
+                  </small>
+                </div>
+              )}
+            </div>
+
             <div className="form-group checkbox-group">
               <label>
                 <input
@@ -632,11 +782,15 @@ function App() {
 
             <button 
               type="submit" 
-              disabled={loading || !file} 
+              disabled={loading || (!file && batchFiles.length === 0)} 
               className="submit-button"
-              aria-label={loading ? t('upload.uploadingButton') : t('upload.uploadButton')}
+              aria-label={loading ? t('upload.uploadingButton') : (batchFiles.length > 1 ? t('upload.uploadBatchButton', { defaultValue: `Start Batch (${batchFiles.length} files)`, count: batchFiles.length }) : t('upload.uploadButton'))}
             >
-              {loading ? t('upload.uploadingButton') : t('upload.uploadButton')}
+              {loading
+                ? t('upload.uploadingButton')
+                : batchFiles.length > 1
+                  ? t('upload.uploadBatchButton', { defaultValue: `Start Batch (${batchFiles.length} files)`, count: batchFiles.length })
+                  : t('upload.uploadButton')}
             </button>
           </form>
         </section>

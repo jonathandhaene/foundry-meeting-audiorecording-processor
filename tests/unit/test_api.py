@@ -302,3 +302,122 @@ class TestProcessTranscription:
         assert jobs_db[job_id]["status"] == "failed"
         assert jobs_db[job_id]["error"] is not None
         assert "Processing error" in jobs_db[job_id]["error"]
+
+
+class TestBatchEndpoint:
+    """Test batch transcription endpoint."""
+
+    @patch("meeting_processor.api.app.process_transcription")
+    def test_batch_upload_single_file(self, mock_process, client, mock_audio_file):
+        """Test batch endpoint with a single file."""
+        with open(mock_audio_file, "rb") as f:
+            response = client.post(
+                "/api/batch",
+                files=[("files", ("test.wav", f, "audio/wav"))],
+                data={"method": "azure", "parallel_batch": "false", "max_concurrent": "2"},
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "job_ids" in data
+        assert len(data["job_ids"]) == 1
+        assert data["parallel_batch"] is False
+        assert data["max_concurrent"] == 1  # parallel_batch=false forces 1
+
+    @patch("meeting_processor.api.app.process_transcription")
+    def test_batch_upload_multiple_files(self, mock_process, client, mock_audio_file):
+        """Test batch endpoint with multiple files."""
+        with open(mock_audio_file, "rb") as f1, open(mock_audio_file, "rb") as f2:
+            response = client.post(
+                "/api/batch",
+                files=[
+                    ("files", ("test1.wav", f1, "audio/wav")),
+                    ("files", ("test2.wav", f2, "audio/wav")),
+                ],
+                data={"method": "azure", "parallel_batch": "true", "max_concurrent": "2"},
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["job_ids"]) == 2
+        assert data["parallel_batch"] is True
+        assert data["max_concurrent"] == 2
+        assert "2 job(s) started" in data["message"]
+
+        # Verify both jobs were created
+        for jid in data["job_ids"]:
+            assert jid in jobs_db
+            assert jobs_db[jid]["batch_parallel"] is True
+
+    @patch("meeting_processor.api.app.process_transcription")
+    def test_batch_stores_chunk_size(self, mock_process, client, mock_audio_file):
+        """Test that chunk_size is stored in batch jobs."""
+        with open(mock_audio_file, "rb") as f:
+            response = client.post(
+                "/api/batch",
+                files=[("files", ("test.wav", f, "audio/wav"))],
+                data={"method": "whisper_local", "chunk_size": "120"},
+            )
+
+        assert response.status_code == 200
+        job_id = response.json()["job_ids"][0]
+        assert jobs_db[job_id]["chunk_size"] == 120
+
+    def test_batch_upload_no_files(self, client):
+        """Test batch endpoint requires at least one file."""
+        response = client.post(
+            "/api/batch",
+            data={"method": "azure"},
+        )
+        assert response.status_code == 422  # Validation error: files required
+
+
+class TestChunkSizeEndpoint:
+    """Test that chunk_size is accepted and stored in single-file transcription."""
+
+    @patch("meeting_processor.api.app.process_transcription")
+    def test_chunk_size_stored_in_job(self, mock_process, client, mock_audio_file):
+        """Test chunk_size parameter is persisted in the job record."""
+        with open(mock_audio_file, "rb") as f:
+            response = client.post(
+                "/api/transcribe",
+                files={"file": ("test.wav", f, "audio/wav")},
+                data={"method": "whisper_local", "chunk_size": "60"},
+            )
+
+        assert response.status_code == 200
+        job_id = response.json()["job_id"]
+        assert jobs_db[job_id]["chunk_size"] == 60
+
+    @patch("meeting_processor.api.app.process_transcription")
+    def test_chunk_size_zero_stored_as_none(self, mock_process, client, mock_audio_file):
+        """Test that omitting chunk_size leaves it as None."""
+        with open(mock_audio_file, "rb") as f:
+            response = client.post(
+                "/api/transcribe",
+                files={"file": ("test.wav", f, "audio/wav")},
+                data={"method": "whisper_local"},
+            )
+
+        assert response.status_code == 200
+        job_id = response.json()["job_id"]
+        assert jobs_db[job_id]["chunk_size"] is None
+
+
+class TestPersistentJobStoreClear:
+    """Test PersistentJobStore clear() method."""
+
+    def test_clear_removes_all_jobs(self, client):
+        """Test that clear() empties the job store."""
+        jobs_db["job-a"] = {"job_id": "job-a", "status": "pending", "filename": "a.wav",
+                            "method": "azure", "created_at": "2024-01-01T00:00:00"}
+        jobs_db["job-b"] = {"job_id": "job-b", "status": "completed", "filename": "b.wav",
+                            "method": "azure", "created_at": "2024-01-01T00:00:00"}
+
+        response = client.get("/api/jobs")
+        assert len(response.json()["jobs"]) == 2
+
+        jobs_db.clear()
+
+        response = client.get("/api/jobs")
+        assert response.json()["jobs"] == []

@@ -88,10 +88,18 @@ def main():
     print("   print(results['transcription']['full_text'])")
     print()
     
-    print("4. Batch processing:")
+    print("4. Batch processing (sequential):")
     print()
     print("   files = ['meeting1.wav', 'meeting2.wav']")
     print("   results = processor.process_batch(files, './batch_output')")
+    print()
+
+    print("5. Parallel batch processing:")
+    print()
+    print("   files = ['meeting1.wav', 'meeting2.wav', 'meeting3.wav']")
+    print("   results = processor.process_batch(")
+    print("       files, './batch_output', parallel=True, max_concurrent=3")
+    print("   )")
     print()
     
     print("=" * 70)
