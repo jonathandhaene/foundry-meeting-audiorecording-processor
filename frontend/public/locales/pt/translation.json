@@ -55,12 +55,23 @@
     "channelsMono": "1 – Mono (recommended)",
     "channelsStereo": "2 – Stereo",
     "audioSampleRate": "Sample Rate",
-    "audioBitRate": "Bit Rate"
+    "audioBitRate": "Bit Rate",
+    "hfSectionTitle": "🤗 HuggingFace Wav2Vec 2.0 Settings",
+    "hfModel": "Wav2Vec 2.0 Model",
+    "hfModelBase": "Base English (960h)",
+    "hfModelLarge": "Large English – High Accuracy",
+    "hfModelMultilingual": "Multilingual XLSR-53",
+    "hfModelHelp": "Select a pre-trained model. Multilingual model supports 53 languages.",
+    "hfUseApi": "Use Inference API / Foundry Endpoint",
+    "hfEndpoint": "Custom Endpoint URL (optional)",
+    "hfEndpointPlaceholder": "https://your-foundry-endpoint/score",
+    "hfEndpointHelp": "Leave blank to use the HuggingFace Inference API. Set HUGGINGFACE_API_TOKEN on the server for authentication."
   },
   "methods": {
     "azure": "Azure Speech Services",
     "whisper_local": "Whisper (Local)",
-    "whisper_api": "Whisper (API OpenAI)"
+    "whisper_api": "Whisper (API OpenAI)",
+    "huggingface": "HuggingFace Wav2Vec 2.0"
   },
   "whisperModels": {
     "tiny": "Tiny (mais rápido, menos preciso)",
@@ -140,7 +151,10 @@
     "nlpSummary": "Generates a concise summary of the entire meeting, capturing the main points discussed.",
     "audioChannels": "Number of audio channels. Use 1 (mono) for best speech recognition results. Use 2 (stereo) only if your recording has separate speaker channels.",
     "audioSampleRate": "Audio sample rate in Hz. 16 kHz is optimal for speech recognition. Higher rates preserve more audio detail but increase processing time and file size.",
-    "audioBitRate": "Audio encoding bit rate. Lower values reduce file size, higher values preserve quality. 16k is sufficient for speech; use higher for music or high-fidelity recordings."
+    "audioBitRate": "Audio encoding bit rate. Lower values reduce file size, higher values preserve quality. 16k is sufficient for speech; use higher for music or high-fidelity recordings.",
+    "hfModel": "HuggingFace model identifier. Use a pre-trained or fine-tuned Wav2Vec 2.0 model.",
+    "hfUseApi": "Send audio to a remote HuggingFace Inference API or a Foundry-deployed endpoint instead of running locally.",
+    "hfEndpoint": "Override the default HuggingFace Inference API URL with a custom Foundry-deployed endpoint."
   },
   "notifications": {
     "jobStarted": "Transcription started",

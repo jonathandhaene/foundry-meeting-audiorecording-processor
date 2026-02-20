@@ -1,6 +1,6 @@
 # Meeting Audio Recording Processor
 
-A comprehensive end-to-end solution for processing meeting audio files with multi-speaker, multilingual conversations. This project provides both a **Web UI** and **API** for easy audio transcription using multiple methods (Azure Speech Services, OpenAI Whisper), along with content analysis capabilities.
+A comprehensive end-to-end solution for processing meeting audio files with multi-speaker, multilingual conversations. This project provides both a **Web UI** and **API** for easy audio transcription using multiple methods (Azure Speech Services, OpenAI Whisper, HuggingFace Wav2Vec 2.0), along with content analysis capabilities.
 
 ## Features
 
@@ -8,6 +8,7 @@ A comprehensive end-to-end solution for processing meeting audio files with mult
 - **Multiple Transcription Methods**:
   - Azure Speech Services (with speaker diarization)
   - OpenAI Whisper (local or API)
+  - **HuggingFace Wav2Vec 2.0** (local, HF Inference API, or Foundry-deployed endpoint)
   - Configurable options for each method
 - **Custom Terminology Support**: 
   - Define domain-specific vocabulary for improved accuracy
@@ -254,6 +255,7 @@ python -m meeting_processor.pipeline audio_file.wav --skip-preprocessing
 
 ```python
 from meeting_processor.transcription import AzureSpeechTranscriber, WhisperTranscriber
+from meeting_processor.transcription.hf_transcriber import HuggingFaceTranscriber
 
 # Example 1: Azure Speech with custom terms
 custom_terms = ["Kubernetes", "Docker", "MLOps", "Azure DevOps"]
@@ -280,6 +282,31 @@ whisper_transcriber = WhisperTranscriber(
     custom_terms=["Terraform", "CI/CD", "GitOps"]
 )
 result = whisper_transcriber.transcribe_audio("meeting.wav")
+
+# Example 4: HuggingFace Wav2Vec 2.0 via Inference API
+#   Set HUGGINGFACE_API_TOKEN env var (or pass api_token=) for private models
+hf_transcriber = HuggingFaceTranscriber(
+    model_name="facebook/wav2vec2-base-960h",  # Base English model
+    use_api=True,
+)
+result = hf_transcriber.transcribe_audio("meeting.wav")
+print(result.full_text)
+
+# Example 5: HuggingFace Wav2Vec 2.0 via Foundry-deployed endpoint
+#   Deploy the model via the infra/terraform/hf-inference-server.tf config
+hf_transcriber = HuggingFaceTranscriber(
+    model_name="facebook/wav2vec2-large-xlsr-53",  # Multilingual model
+    endpoint_url="https://your-foundry-endpoint/score",
+)
+result = hf_transcriber.transcribe_audio("meeting.wav")
+
+# Example 6: HuggingFace Wav2Vec 2.0 local inference
+#   Requires: pip install transformers>=4.48.0 torch>=2.6.0 soundfile
+hf_transcriber = HuggingFaceTranscriber(
+    model_name="facebook/wav2vec2-base-960h",
+    use_api=False,
+)
+result = hf_transcriber.transcribe_audio("meeting.wav")
 
 # Access results
 print("Transcription:", result.full_text)
@@ -491,6 +518,35 @@ Weekly security scans using:
 - `DEFAULT_LANGUAGE`: Primary language code (default: en-US)
 - `ENABLE_SPEAKER_DIARIZATION`: Enable speaker identification (default: true)
 - `MAX_SPEAKERS`: Maximum number of speakers (default: 10)
+
+### HuggingFace Wav2Vec 2.0
+
+- `HUGGINGFACE_API_TOKEN`: HuggingFace API token for private model access and rate-limit bypass. The token is read by `HuggingFaceTranscriber` if not passed directly.
+- `HUGGINGFACE_ENDPOINT_URL`: Custom inference endpoint URL (e.g., a Foundry-deployed Wav2Vec 2.0 server). Overrides the default HuggingFace Inference API URL when set.
+
+#### Deploying via Microsoft Foundry
+
+The `infra/terraform/hf-inference-server.tf` Terraform config provisions all Azure ML resources required to host the Wav2Vec 2.0 inference server:
+
+```bash
+# Enable HuggingFace inference server deployment
+cd infra/terraform
+terraform apply \
+  -var="hf_deploy_inference_server=true" \
+  -var="hf_wav2vec_model_name=facebook/wav2vec2-base-960h" \
+  -var="hf_api_token=<your_hf_token>"
+
+# After deployment, set the endpoint URL
+export HUGGINGFACE_ENDPOINT_URL=$(terraform output -raw hf_inference_endpoint_uri)
+```
+
+#### Supported Models
+
+| Model ID | Language | Description |
+|----------|----------|-------------|
+| `facebook/wav2vec2-base-960h` | English | Base model, fastest inference |
+| `facebook/wav2vec2-large-960h-lv60-self` | English | Large model, highest accuracy |
+| `facebook/wav2vec2-large-xlsr-53` | Multilingual | 53 languages supported |
 
 ## Performance Considerations
 

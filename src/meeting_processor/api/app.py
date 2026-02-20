@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 
 from ..transcription.transcriber import AzureSpeechTranscriber
 from ..transcription.whisper_transcriber import WhisperTranscriber
+from ..transcription.hf_transcriber import HuggingFaceTranscriber
 from ..audio.preprocessor import AudioPreprocessor
 from ..nlp.analyzer import ContentAnalyzer
 from ..utils.config import ConfigManager
@@ -139,6 +140,7 @@ class TranscriptionMethod(str, Enum):
     AZURE = "azure"
     WHISPER_LOCAL = "whisper_local"
     WHISPER_API = "whisper_api"
+    HUGGINGFACE = "huggingface"
 
 
 class JobStatus(str, Enum):
@@ -223,6 +225,10 @@ async def transcribe_audio(
     # --- Advanced: Whisper settings ---
     whisper_temperature: Optional[float] = Form(default=None),
     whisper_prompt: Optional[str] = Form(default=None),
+    # --- Advanced: HuggingFace Wav2Vec 2.0 settings ---
+    hf_model: str = Form(default="facebook/wav2vec2-base-960h"),
+    hf_use_api: bool = Form(default=True),
+    hf_endpoint: Optional[str] = Form(default=None),
     # --- Advanced: NLP settings ---
     summary_sentence_count: Optional[int] = Form(default=None),
     nlp_features: Optional[str] = Form(default=None),
@@ -290,6 +296,9 @@ async def transcribe_audio(
         "word_level_timestamps": word_level_timestamps,
         "whisper_temperature": whisper_temperature,
         "whisper_prompt": whisper_prompt,
+        "hf_model": hf_model,
+        "hf_use_api": hf_use_api,
+        "hf_endpoint": hf_endpoint,
         "summary_sentence_count": summary_sentence_count,
         "nlp_features": nlp_features,
         "sentiment_confidence_threshold": sentiment_confidence_threshold,
@@ -320,6 +329,9 @@ async def transcribe_audio(
         word_level_timestamps=word_level_timestamps,
         whisper_temperature=whisper_temperature,
         whisper_prompt=whisper_prompt,
+        hf_model=hf_model,
+        hf_use_api=hf_use_api,
+        hf_endpoint=hf_endpoint,
         summary_sentence_count=summary_sentence_count,
         nlp_features=nlp_features,
         sentiment_confidence_threshold=sentiment_confidence_threshold,
@@ -419,6 +431,10 @@ async def batch_transcribe(
     # --- Advanced: Whisper settings ---
     whisper_temperature: Optional[float] = Form(default=None),
     whisper_prompt: Optional[str] = Form(default=None),
+    # --- Advanced: HuggingFace Wav2Vec 2.0 settings ---
+    hf_model: str = Form(default="facebook/wav2vec2-base-960h"),
+    hf_use_api: bool = Form(default=True),
+    hf_endpoint: Optional[str] = Form(default=None),
     # --- Advanced: NLP settings ---
     summary_sentence_count: Optional[int] = Form(default=None),
     nlp_features: Optional[str] = Form(default=None),
@@ -478,6 +494,9 @@ async def batch_transcribe(
             "word_level_timestamps": word_level_timestamps,
             "whisper_temperature": whisper_temperature,
             "whisper_prompt": whisper_prompt,
+            "hf_model": hf_model,
+            "hf_use_api": hf_use_api,
+            "hf_endpoint": hf_endpoint,
             "summary_sentence_count": summary_sentence_count,
             "nlp_features": nlp_features,
             "sentiment_confidence_threshold": sentiment_confidence_threshold,
@@ -514,6 +533,9 @@ async def batch_transcribe(
                     word_level_timestamps=word_level_timestamps,
                     whisper_temperature=whisper_temperature,
                     whisper_prompt=whisper_prompt,
+                    hf_model=hf_model,
+                    hf_use_api=hf_use_api,
+                    hf_endpoint=hf_endpoint,
                     summary_sentence_count=summary_sentence_count,
                     nlp_features=nlp_features,
                     sentiment_confidence_threshold=sentiment_confidence_threshold,
@@ -549,6 +571,9 @@ def process_transcription(
     word_level_timestamps: bool = False,
     whisper_temperature: Optional[float] = None,
     whisper_prompt: Optional[str] = None,
+    hf_model: str = "facebook/wav2vec2-base-960h",
+    hf_use_api: bool = True,
+    hf_endpoint: Optional[str] = None,
     summary_sentence_count: Optional[int] = None,
     nlp_features: Optional[str] = None,
     sentiment_confidence_threshold: Optional[float] = 0.6,
@@ -701,6 +726,21 @@ def process_transcription(
                 10,
             )
             _update_pipeline(stages, "Transcribing with Azure Whisper...")
+            transcription_result = transcriber.transcribe_audio(processed_path)
+        elif method == "huggingface":
+            transcriber = HuggingFaceTranscriber(
+                model_name=hf_model,
+                language=language,
+                use_api=hf_use_api,
+                endpoint_url=hf_endpoint,
+                custom_terms=custom_terms,
+            )
+            stages["transcription"] = _stage(
+                "running",
+                f"Transcribing with Wav2Vec 2.0 ({hf_model})...",
+                10,
+            )
+            _update_pipeline(stages, "Transcribing with HuggingFace Wav2Vec 2.0...")
             transcription_result = transcriber.transcribe_audio(processed_path)
         else:
             raise ValueError(f"Unknown transcription method: {method}")

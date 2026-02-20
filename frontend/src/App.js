@@ -51,6 +51,10 @@ function App() {
   // Whisper advanced
   const [whisperTemperature, setWhisperTemperature] = useState(0);
   const [whisperPrompt, setWhisperPrompt] = useState('');
+  // HuggingFace Wav2Vec 2.0 advanced
+  const [hfModel, setHfModel] = useState('facebook/wav2vec2-base-960h');
+  const [hfUseApi, setHfUseApi] = useState(true);
+  const [hfEndpoint, setHfEndpoint] = useState('');
   // Audio pre-processing
   const [audioChannels, setAudioChannels] = useState(1);
   const [audioSampleRate, setAudioSampleRate] = useState(16000);
@@ -194,6 +198,11 @@ function App() {
       if (method === 'whisper_api') {
         if (whisperTemperature > 0) fd.append('whisper_temperature', whisperTemperature);
         if (whisperPrompt) fd.append('whisper_prompt', whisperPrompt);
+      }
+      if (method === 'huggingface') {
+        fd.append('hf_model', hfModel);
+        fd.append('hf_use_api', hfUseApi);
+        if (hfEndpoint) fd.append('hf_endpoint', hfEndpoint);
       }
       if (enableNlp) {
         fd.append('summary_sentence_count', summarySentenceCount);
@@ -423,13 +432,18 @@ function App() {
               >
                 <option value="azure">{t('methods.azure')}</option>
                 <option value="whisper_api">{t('methods.whisper_api', { defaultValue: 'Azure Whisper' })}</option>
+                <option value="huggingface">{t('methods.huggingface', { defaultValue: 'HuggingFace Wav2Vec 2.0' })}</option>
               </select>
             </div>
 
             {/* Method-specific settings inline */}
             <div className="settings-section method-settings">
               <h4 className="settings-section-title">
-                {method === 'azure' ? t('upload.azureSectionTitle') : t('upload.whisperSectionTitle')}
+                {method === 'azure'
+                  ? t('upload.azureSectionTitle')
+                  : method === 'huggingface'
+                  ? t('upload.hfSectionTitle', { defaultValue: '🤗 HuggingFace Wav2Vec 2.0 Settings' })
+                  : t('upload.whisperSectionTitle')}
               </h4>
 
               {method === 'azure' && (
@@ -529,6 +543,55 @@ function App() {
                       {t('upload.initialPromptHelp', { count: whisperPrompt.length })}
                     </small>
                   </div>
+                </>
+              )}
+
+              {method === 'huggingface' && (
+                <>
+                  <div className="form-group">
+                    <label htmlFor="hfModel">{t('upload.hfModel', { defaultValue: 'Wav2Vec 2.0 Model' })}<InfoTooltip text={t('tooltips.hfModel', { defaultValue: 'HuggingFace model identifier. Use a pre-trained or fine-tuned Wav2Vec 2.0 model.' })} /></label>
+                    <select
+                      id="hfModel"
+                      value={hfModel}
+                      onChange={(e) => setHfModel(e.target.value)}
+                      className="select-input"
+                    >
+                      <option value="facebook/wav2vec2-base-960h">{t('upload.hfModelBase', { defaultValue: 'Base English (960h)' })}</option>
+                      <option value="facebook/wav2vec2-large-960h-lv60-self">{t('upload.hfModelLarge', { defaultValue: 'Large English – High Accuracy' })}</option>
+                      <option value="facebook/wav2vec2-large-xlsr-53">{t('upload.hfModelMultilingual', { defaultValue: 'Multilingual XLSR-53' })}</option>
+                    </select>
+                    <small className="help-text">
+                      {t('upload.hfModelHelp', { defaultValue: 'Select a pre-trained model. Multilingual model supports 53 languages.' })}
+                    </small>
+                  </div>
+
+                  <div className="form-group checkbox-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={hfUseApi}
+                        onChange={(e) => setHfUseApi(e.target.checked)}
+                      />
+                      {t('upload.hfUseApi', { defaultValue: 'Use Inference API / Foundry Endpoint' })}<InfoTooltip text={t('tooltips.hfUseApi', { defaultValue: 'Send audio to a remote HuggingFace Inference API or a Foundry-deployed endpoint instead of running locally.' })} />
+                    </label>
+                  </div>
+
+                  {hfUseApi && (
+                    <div className="form-group">
+                      <label htmlFor="hfEndpoint">{t('upload.hfEndpoint', { defaultValue: 'Custom Endpoint URL (optional)' })}<InfoTooltip text={t('tooltips.hfEndpoint', { defaultValue: 'Override the default HuggingFace Inference API URL with a custom Foundry-deployed endpoint.' })} /></label>
+                      <input
+                        id="hfEndpoint"
+                        type="text"
+                        value={hfEndpoint}
+                        onChange={(e) => setHfEndpoint(e.target.value)}
+                        placeholder={t('upload.hfEndpointPlaceholder', { defaultValue: 'https://your-foundry-endpoint/score' })}
+                        className="text-input"
+                      />
+                      <small className="help-text">
+                        {t('upload.hfEndpointHelp', { defaultValue: 'Leave blank to use the HuggingFace Inference API. Set HUGGINGFACE_API_TOKEN on the server for authentication.' })}
+                      </small>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -901,6 +964,7 @@ function JobCard({ job, deleteJob, t }) {
     azure: 'Azure AI Speech',
     whisper_api: 'Azure OpenAI Whisper',
     whisper_local: 'OpenAI Whisper (Local)',
+    huggingface: 'HuggingFace Wav2Vec 2.0',
   };
 
   const segments = job.result?.transcription?.segments;
