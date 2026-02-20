@@ -141,13 +141,15 @@ class TestContentAnalyzer:
         assert isinstance(action_items, list)
 
     def test_generate_summary(self, analyzer):
-        """Test generating a summary (via _fallback_summary when Azure API unavailable)."""
+        """Test generating a fallback summary from text."""
         text = "First sentence about topic1. Second sentence about topic2. Third sentence. Fourth sentence."
 
         summary = analyzer._fallback_summary(text)
 
         assert isinstance(summary, str)
         assert len(summary) > 0
+        # Fallback summary picks sentences from the text, so original words should appear
+        assert "First sentence" in summary or "Second sentence" in summary or "Fourth sentence" in summary
 
     def test_extract_topics(self, analyzer):
         """Test extracting topics from key phrases."""
@@ -160,6 +162,9 @@ class TestContentAnalyzer:
         topics = analyzer._extract_topics(key_phrases)
 
         assert isinstance(topics, list)
+        assert "machine learning" in topics
+        assert "data pipeline" in topics
+        assert "security review" in topics
 
 
 if __name__ == "__main__":
