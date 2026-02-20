@@ -92,8 +92,12 @@ class ConfigManager:
             True if configuration is valid, False otherwise
         """
         try:
-            self.get_azure_config()
+            azure_config = self.get_azure_config()
             self.get_processing_config()
+            # Require at minimum a speech key or resource ID for Azure authentication
+            if not azure_config.speech_key and not azure_config.speech_resource_id:
+                print("Configuration validation failed: AZURE_SPEECH_KEY or AZURE_SPEECH_RESOURCE_ID is required")
+                return False
             return True
         except ValueError as e:
             print(f"Configuration validation failed: {e}")

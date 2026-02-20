@@ -97,14 +97,16 @@ class TestWhisperTranscriber:
     @patch("meeting_processor.transcription.whisper_transcriber.openai")
     def test_transcribe_api(self, mock_openai):
         """Test API-based transcription."""
-        # Setup mock API response
-        mock_response = {
-            "text": "API transcription result",
-            "language": "en",
-            "duration": 5.0,
-            "segments": [{"text": "API transcription result", "start": 0.0, "end": 5.0}],
-        }
-        mock_openai.Audio.transcribe.return_value = mock_response
+        # Setup mock client and response using OpenAI v1 API style
+        mock_response = MagicMock()
+        mock_response.text = "API transcription result"
+        mock_response.language = "en"
+        mock_response.duration = 5.0
+        mock_response.segments = []
+
+        mock_client = MagicMock()
+        mock_client.audio.transcriptions.create.return_value = mock_response
+        mock_openai.OpenAI.return_value = mock_client
 
         transcriber = WhisperTranscriber(use_api=True, api_key="test_key")
 
@@ -113,7 +115,7 @@ class TestWhisperTranscriber:
             result = transcriber.transcribe_audio("test.wav")
 
         # Verify API was called
-        assert mock_openai.Audio.transcribe.called
+        assert mock_client.audio.transcriptions.create.called
         assert result.full_text == "API transcription result"
         assert result.duration == 5.0
         assert result.metadata["method"] == "whisper_api"
@@ -161,8 +163,15 @@ class TestWhisperTranscriber:
     @patch("meeting_processor.transcription.whisper_transcriber.openai")
     def test_transcribe_api_with_language(self, mock_openai):
         """Test API transcription with language specification."""
-        mock_response = {"text": "Bonjour", "language": "fr", "duration": 1.0, "segments": []}
-        mock_openai.Audio.transcribe.return_value = mock_response
+        mock_response = MagicMock()
+        mock_response.text = "Bonjour"
+        mock_response.language = "fr"
+        mock_response.duration = 1.0
+        mock_response.segments = []
+
+        mock_client = MagicMock()
+        mock_client.audio.transcriptions.create.return_value = mock_response
+        mock_openai.OpenAI.return_value = mock_client
 
         transcriber = WhisperTranscriber(language="fr", use_api=True, api_key="test_key")
 
@@ -171,8 +180,8 @@ class TestWhisperTranscriber:
             result = transcriber.transcribe_audio("test.wav")
 
         # Verify language was passed to API
-        call_args = mock_openai.Audio.transcribe.call_args
-        assert call_args[1]["language"] == "fr"
+        call_kwargs = mock_client.audio.transcriptions.create.call_args[1]
+        assert call_kwargs["language"] == "fr"
         assert result.language == "fr"
 
     @patch("meeting_processor.transcription.whisper_transcriber.whisper", create=True)
@@ -240,8 +249,15 @@ class TestWhisperTranscriber:
     @patch("meeting_processor.transcription.whisper_transcriber.openai", create=True)
     def test_transcribe_api_with_custom_terms(self, mock_openai):
         """Test API transcription with custom terms."""
-        mock_response = {"text": "Using Azure DevOps", "language": "en", "duration": 2.0, "segments": []}
-        mock_openai.Audio.transcribe.return_value = mock_response
+        mock_response = MagicMock()
+        mock_response.text = "Using Azure DevOps"
+        mock_response.language = "en"
+        mock_response.duration = 2.0
+        mock_response.segments = []
+
+        mock_client = MagicMock()
+        mock_client.audio.transcriptions.create.return_value = mock_response
+        mock_openai.OpenAI.return_value = mock_client
 
         custom_terms = ["Azure DevOps"]
         transcriber = WhisperTranscriber(custom_terms=custom_terms, use_api=True, api_key="test_key")
@@ -251,9 +267,9 @@ class TestWhisperTranscriber:
             result = transcriber.transcribe_audio("test.wav")
 
         # Verify prompt parameter was passed to API
-        call_args = mock_openai.Audio.transcribe.call_args
-        assert "prompt" in call_args[1]
-        assert "Azure DevOps" in call_args[1]["prompt"]
+        call_kwargs = mock_client.audio.transcriptions.create.call_args[1]
+        assert "prompt" in call_kwargs
+        assert "Azure DevOps" in call_kwargs["prompt"]
 
         # Verify metadata includes custom terms count
         assert result.metadata["custom_terms_count"] == 1

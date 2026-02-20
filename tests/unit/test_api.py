@@ -273,7 +273,7 @@ class TestProcessTranscription:
         # Setup mocks to raise exception
         mock_config_class.return_value = Mock()
         mock_preprocessor = Mock()
-        mock_preprocessor.preprocess_audio.side_effect = Exception("Processing error")
+        mock_preprocessor.normalize_audio.side_effect = Exception("Processing error")
         mock_preprocessor_class.return_value = mock_preprocessor
 
         # Create job

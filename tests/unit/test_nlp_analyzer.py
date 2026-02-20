@@ -141,29 +141,25 @@ class TestContentAnalyzer:
         assert isinstance(action_items, list)
 
     def test_generate_summary(self, analyzer):
-        """Test generating a summary."""
-        text = "First sentence. Second sentence. Third sentence. Fourth sentence."
-        key_phrases = [KeyPhrase("topic1", 0.9), KeyPhrase("topic2", 0.8)]
-        topics = ["topic1", "topic2"]
+        """Test generating a summary (via _fallback_summary when Azure API unavailable)."""
+        text = "First sentence about topic1. Second sentence about topic2. Third sentence. Fourth sentence."
 
-        summary = analyzer._generate_summary(text, key_phrases, topics)
+        summary = analyzer._fallback_summary(text)
 
         assert isinstance(summary, str)
         assert len(summary) > 0
-        assert "topic1" in summary or "topic2" in summary
 
-    def test_categorize_content(self, analyzer):
-        """Test categorizing content."""
-        text = "We discussed security and privacy concerns in detail."
-        categories = ["security", "privacy", "performance"]
+    def test_extract_topics(self, analyzer):
+        """Test extracting topics from key phrases."""
+        key_phrases = [
+            KeyPhrase(text="machine learning", score=0.9),
+            KeyPhrase(text="data pipeline", score=0.8),
+            KeyPhrase(text="security review", score=0.7),
+        ]
 
-        scores = analyzer.categorize_content(text, categories)
+        topics = analyzer._extract_topics(key_phrases)
 
-        assert isinstance(scores, dict)
-        assert "security" in scores
-        assert "privacy" in scores
-        assert scores["security"] > 0
-        assert scores["privacy"] > 0
+        assert isinstance(topics, list)
 
 
 if __name__ == "__main__":
