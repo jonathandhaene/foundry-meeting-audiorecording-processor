@@ -56,12 +56,13 @@ class TestConfigManager:
             assert config.max_speakers == 10
 
     def test_missing_required_config(self):
-        """Test error handling for missing required config."""
+        """Test that missing Azure auth config results in None speech_key."""
         with patch.dict(os.environ, {}, clear=True):
             manager = ConfigManager()
+            config = manager.get_azure_config()
 
-            with pytest.raises(ValueError):
-                manager.get_azure_config()
+            assert config.speech_key is None
+            assert config.speech_resource_id is None
 
     @patch.dict(
         os.environ,

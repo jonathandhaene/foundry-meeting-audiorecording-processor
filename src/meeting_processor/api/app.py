@@ -43,7 +43,10 @@ logger = logging.getLogger(__name__)
 class PersistentJobStore:
     """Thread-safe, file-backed job storage."""
 
-    def __init__(self, path: str = "/home/meeting_transcription/jobs.json"):
+    def __init__(self, path: Optional[str] = None):
+        if path is None:
+            transcription_dir = os.environ.get("TRANSCRIPTION_DIR", "./meeting_transcription")
+            path = os.path.join(transcription_dir, "jobs.json")
         self._path = Path(path)
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
@@ -126,7 +129,7 @@ app.add_middleware(
 jobs_db = PersistentJobStore()
 
 # Temporary file storage directory (use persistent /home/ mount on Azure App Service)
-AUDIO_DIR = Path("/home/meeting_transcription/audio")
+AUDIO_DIR = Path(os.environ.get("TRANSCRIPTION_DIR", "./meeting_transcription")) / "audio"
 AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
 # Export constants

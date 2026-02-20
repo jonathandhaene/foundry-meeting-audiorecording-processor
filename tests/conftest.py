@@ -1,5 +1,7 @@
 """Pytest configuration and shared fixtures."""
 
+import os
+import tempfile
 import pytest
 import sys
 from pathlib import Path
@@ -8,6 +10,11 @@ from unittest.mock import Mock
 # Add src to path for imports
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
+
+# Use a temporary directory for TRANSCRIPTION_DIR so module-level initialization
+# in app.py does not attempt to create /home/meeting_transcription in CI.
+_tmp_transcription_dir = tempfile.mkdtemp()
+os.environ.setdefault("TRANSCRIPTION_DIR", _tmp_transcription_dir)
 
 
 # Mock Azure and Whisper modules at the module level for all tests
